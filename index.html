@@ -37,6 +37,11 @@
       <div class="pct" id="screenPct">100%</div>
       <p class="hint">Двойной тап — включить свет<br>Свайп вверх/вниз — яркость</p>
       <div class="colors" id="colors"></div>
+      <div class="rgb" id="rgbBox">
+        <div><b style="color:#ff4d4d">R</b><input type="range" id="rR" min="0" max="255"><span id="vR"></span></div>
+        <div><b style="color:#4dff7a">G</b><input type="range" id="rG" min="0" max="255"><span id="vG"></span></div>
+        <div><b style="color:#4d8aff">B</b><input type="range" id="rB" min="0" max="255"><span id="vB"></span></div>
+      </div>
       <p class="note">Совет: выкрутите системную яркость телефона на максимум — сайт не может менять её сам.</p>
     </div>
   </section>
@@ -45,8 +50,42 @@
   <section id="tab-modes" class="tab">
     <header><h1>Режимы</h1></header>
     <div class="scroll">
+      <input type="search" id="modeSearch" class="search" placeholder="🔍 Поиск режима…" autocomplete="off">
       <button id="lastBtn" class="last" hidden></button>
       <div id="modeList"></div>
+    </div>
+  </section>
+
+  <!-- МОРЗЕ -->
+  <section id="tab-morse" class="tab">
+    <header><h1>Морзе</h1><div class="seg mini" id="mLang"><button data-v="ru" class="sel">RU</button><button data-v="en">EN</button></div></header>
+    <div class="seg subtabs" id="mSub"><button data-v="rx" class="sel">📷 Приёмник</button><button data-v="dec">⌨️ Декодер</button><button data-v="abc">🔤 Азбука</button></div>
+    <div class="scroll">
+      <div id="m-rx" class="msub">
+        <div class="cam">
+          <video id="rxVideo" playsinline muted autoplay></video>
+          <div class="aim" id="rxAim"></div>
+          <div class="rxlamp" id="rxLamp"></div>
+          <button id="rxStart" class="btn camstart">📷 Включить приёмник</button>
+        </div>
+        <div class="levelbar"><div id="rxLevel"></div><i id="rxThr"></i></div>
+        <div class="rxcur" id="rxCur">&nbsp;</div>
+        <div class="rxtext" id="rxText"></div>
+        <div class="row gap"><button class="btn ghost" id="rxClear">Очистить</button><button class="btn ghost" id="rxStop">Стоп</button></div>
+        <p class="dim">Наведите рамку на мигающий свет и держите телефон неподвижно. Лучше всего работает в темноте. Точки и тире программа различает сама, скорость подстраивается автоматически.</p>
+      </div>
+      <div id="m-dec" class="msub" hidden>
+        <input type="text" id="decIn" placeholder="Например: ... --- ...   (пробел — между буквами, / — между словами)" autocomplete="off" autocapitalize="off" spellcheck="false">
+        <div class="keys">
+          <button data-k=".">·</button><button data-k="-">–</button><button data-k=" ">⎵ буква</button><button data-k=" / ">/ слово</button><button data-k="back">⌫</button><button data-k="clr">✕</button>
+        </div>
+        <div class="decout" id="decOut"></div>
+        <p class="dim" id="decAlt"></p>
+      </div>
+      <div id="m-abc" class="msub" hidden>
+        <p class="dim">Нажмите на букву — она мигнёт и провибрирует своим кодом. Точка — 1 единица, тире — 3, пауза между буквами — 3, между словами — 7.</p>
+        <div class="abc" id="abcGrid"></div>
+      </div>
     </div>
   </section>
 
@@ -84,6 +123,7 @@
   <button data-tab="torch" class="active"><span>🔦</span>Вспышка</button>
   <button data-tab="screen"><span>⬜</span>Экран</button>
   <button data-tab="modes"><span>✨</span>Режимы</button>
+  <button data-tab="morse"><span>📡</span>Морзе</button>
   <button data-tab="more"><span>⚙️</span>Ещё</button>
 </nav>
 
