@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Light Live</title>
+<meta name="theme-color" content="#0b0b10">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Light Live">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <!-- ВСПЫШКА -->
+  <section id="tab-torch" class="tab active">
+    <header><h1>Фонарик</h1><span id="batChip" class="chip" hidden></span></header>
+    <div class="area" id="torchArea">
+      <div class="beam" id="beam"></div>
+      <div class="meter"><div id="torchMeter"></div></div>
+      <button id="torchBtn" class="power" aria-label="Вкл/выкл">⏻</button>
+      <div class="pct" id="torchPct">100%</div>
+      <p class="hint" id="torchHint">Тап по кнопке или двойной тап — вкл/выкл<br>Свайп вверх/вниз — мощность</p>
+      <p class="countdown" id="torchCountdown"></p>
+    </div>
+  </section>
+
+  <!-- ЭКРАН -->
+  <section id="tab-screen" class="tab">
+    <header><h1>Свет экрана</h1></header>
+    <div class="area" id="screenArea">
+      <div class="orb" id="orb"></div>
+      <div class="pct" id="screenPct">100%</div>
+      <p class="hint">Двойной тап — включить свет<br>Свайп вверх/вниз — яркость</p>
+      <div class="colors" id="colors"></div>
+      <p class="note">Совет: выкрутите системную яркость телефона на максимум — сайт не может менять её сам.</p>
+    </div>
+  </section>
+
+  <!-- РЕЖИМЫ -->
+  <section id="tab-modes" class="tab">
+    <header><h1>Режимы</h1></header>
+    <div class="scroll">
+      <button id="lastBtn" class="last" hidden></button>
+      <div id="modeList"></div>
+    </div>
+  </section>
+
+  <!-- ЕЩЁ -->
+  <section id="tab-more" class="tab">
+    <header><h1>Настройки</h1></header>
+    <div class="scroll">
+      <div class="card">
+        <h3>⏱ Автовыключение</h3>
+        <div class="seg" id="timerSeg"></div>
+      </div>
+      <div class="card" id="vibCard">
+        <label class="row"><span>📳 Вибрация в такт миганию</span><input type="checkbox" id="vibChk"></label>
+      </div>
+      <div class="card">
+        <h3>🔋 Батарея</h3>
+        <p id="batInfo">Браузер не сообщает уровень заряда.</p>
+      </div>
+      <div class="card">
+        <h3>🔦 Вспышка камеры</h3>
+        <p id="torchInfo"></p>
+      </div>
+      <div class="card">
+        <h3>📲 Установка на экран «Домой»</h3>
+        <p><b>iPhone (Safari):</b> кнопка «Поделиться» <span class="k">⬆︎</span> → «На экран „Домой“» → «Добавить».</p>
+        <p><b>Android (Chrome):</b> меню <span class="k">⋮</span> → «Добавить на главный экран» / «Установить приложение».</p>
+        <p id="installState" class="dim"></p>
+      </div>
+      <p class="dim center">Light Live · работает офлайн</p>
+    </div>
+  </section>
+</main>
+
+<nav>
+  <button data-tab="torch" class="active"><span>🔦</span>Вспышка</button>
+  <button data-tab="screen"><span>⬜</span>Экран</button>
+  <button data-tab="modes"><span>✨</span>Режимы</button>
+  <button data-tab="more"><span>⚙️</span>Ещё</button>
+</nav>
+
+<!-- Полноэкранная сцена света -->
+<div id="stage" hidden>
+  <div id="glow"></div>
+  <div id="ticker"><span id="tickerText"></span></div>
+  <div class="stage-ui">
+    <div class="stage-top">
+      <div id="stageTitle"></div>
+      <div id="stageCountdown"></div>
+    </div>
+    <div id="stageLabel"></div>
+    <div id="bubble"><div class="bar"><div id="bubbleFill"></div></div><span id="bubbleTxt"></span></div>
+    <div class="stage-bottom">
+      <button id="lockBtn" class="round">🔓</button>
+      <button id="stopBtn" class="round stop">■</button>
+    </div>
+    <p id="stageHint">Двойной тап — выключить · свайп — яркость</p>
+  </div>
+</div>
+
+<!-- Шторка запуска режима -->
+<div id="sheet" hidden>
+  <div class="sheet-body">
+    <div class="sheet-head"><span id="shIc"></span><div><h2 id="shName"></h2><p id="shDesc"></p></div><button id="shFav" class="fav">☆</button></div>
+    <div id="shParam"></div>
+    <div id="shSpeedWrap"><label>Скорость <b id="shSpeedV">1×</b></label><input type="range" id="shSpeed" min="0.25" max="3" step="0.25" value="1"></div>
+    <div id="shTargetWrap"><label>Чем светить</label><div class="seg" id="shTarget"></div></div>
+    <label>Автовыключение</label><div class="seg" id="shTimer"></div>
+    <div class="sheet-actions"><button id="shCancel" class="btn ghost">Отмена</button><button id="shStart" class="btn">▶ Старт</button></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>
