@@ -55,7 +55,11 @@ const Torch = {
     if (this.track && this.want !== this.on) this.apply(this.want);
   },
   /* яркость 0..1: 100% — постоянный свет, между — быстрые мигания (ШИМ) */
-  setLevel(l) { this.level = clamp(l); if (!this.timer && this.track) this.tick(); },
+  setLevel(l) {
+    this.level = clamp(l);
+    if (this.track && (this.level >= .97 || this.level <= .03)) this.apply(this.level > .5); // резкие вкл/выкл — сразу, без ожидания цикла
+    if (!this.timer && this.track) this.tick();
+  },
   tick() {
     const l = this.level, P = 140;
     if (l >= .97 || l <= .03) { this.apply(l > .5); this.timer = setTimeout(() => this.tick(), 30); return; }
@@ -85,10 +89,12 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 const M_LAT = { A:'.-',B:'-...',C:'-.-.',D:'-..',E:'.',F:'..-.',G:'--.',H:'....',I:'..',J:'.---',K:'-.-',L:'.-..',M:'--',N:'-.',O:'---',P:'.--.',Q:'--.-',R:'.-.',S:'...',T:'-',U:'..-',V:'...-',W:'.--',X:'-..-',Y:'-.--',Z:'--..' };
 const M_CYR = { 'А':'.-','Б':'-...','В':'.--','Г':'--.','Д':'-..','Е':'.','Ж':'...-','З':'--..','И':'..','Й':'.---','К':'-.-','Л':'.-..','М':'--','Н':'-.','О':'---','П':'.--.','Р':'.-.','С':'...','Т':'-','У':'..-','Ф':'..-.','Х':'....','Ц':'-.-.','Ч':'---.','Ш':'----','Щ':'--.-','Ъ':'--.--','Ы':'-.--','Ь':'-..-','Э':'..-..','Ю':'..--','Я':'.-.-' };
 const M_NUM = { '0':'-----','1':'.----','2':'..---','3':'...--','4':'....-','5':'.....','6':'-....','7':'--...','8':'---..','9':'----.',
-  '.':'.-.-.-',',':'--..--','?':'..--..','!':'-.-.--','/':'-..-.','@':'.--.-.','-':'-....-' };
+  '.':'.-.-.-',',':'--..--','?':'..--..','!':'-.-.--','/':'-..-.','@':'.--.-.','-':'-....-',
+  ':':'---...',';':'-.-.-.','=':'-...-','+':'.-.-.','"':'.-..-.',"'":'.----.','(':'-.--.',')':'-.--.-','&':'.-...' };
 const MORSE = { ...M_LAT, ...M_CYR, 'Ё': '.', ...M_NUM };
 const invert = (...ms) => { const r = {}; for (const m of ms) for (const [k, v] of Object.entries(m)) if (!(v in r)) r[v] = k; return r; };
 const DEC = { ru: invert(M_CYR, M_NUM), en: invert(M_LAT, M_NUM) };
+DEC.ru['...---...'] = DEC.en['...---...'] = 'SOS'; // SOS передаётся слитно, без пауз между буквами
 const decodeCode = (c, lang) => DEC[lang][c] || (c ? '?' : '');
 const pretty = c => c.replace(/\./g, '·').replace(/-/g, '–');
 /* элементы последовательности: [яркость, длительность в единицах, подпись] */
@@ -111,7 +117,7 @@ function morseItems(text) {
     for (const s of c) out.push([1, s === '.' ? 1 : 3, lab], [0, 1, lab]);
     out.push([0, 2, lab]);
   }
-  out.push([0, 5, '']);
+  out.push([0, 4, '']); // итого 7 единиц после последней буквы — стандартная пауза между словами
   return out;
 }
 function seq(items, unit) {
@@ -312,6 +318,8 @@ MODES.push({ id: 'countdown', cat: 'Полезное', ic: '⏳', name: 'Обр�
   .forEach((w, i) => MODES.push({ id: 'mp' + i, cat: 'Морзе-фразы', ic: '📡', name: w, desc: w.replace(/./g, ch => MORSE[ch] ? pretty(MORSE[ch]) + ' ' : ch === ' ' ? '/ ' : '').trim().slice(0, 60),
     ...seqMode(morseItems(w), U) }));
 
+// режимы, которые передают азбуку Морзе (их можно читать приёмником)
+for (const m of MODES) if (['sos', 'morse', 'help', 'ok', 'custom'].includes(m.id) || m.id.startsWith('mp')) m.morse = true;
 const modeById = id => MODES.find(m => m.id === id);
 const CATS = ['Сигналы', 'Морзе-фразы', 'Эффекты', 'Цвета', 'Переливы', 'Дыхание', 'Стробоскопы', 'Мигалки', 'Ритмы', 'Полезное'];
 const POPULAR = ['sos', 'morse', 'strobe', 'rgb', 'breath', 'police', 'candle', 'disco', 'here', 'mycolor', 'ticker', 'sunset'];
@@ -496,6 +504,8 @@ const Engine = {
     }
     glow.style.opacity = 0;
     this.speed = m.noSpeed ? 1 : (cfg.speeds[m.id] || 1);
+    // вспышка переключается с задержкой — Морзе через неё передаём не быстрее 0.75×, чтобы приёмник читал без ошибок
+    if (m.morse && this.useTorch) this.speed = Math.min(this.speed, .75);
     this.t0 = performance.now(); this.prev = 0;
     wake(true); startTimer(cfg.timer);
     const loop = () => {
@@ -634,20 +644,28 @@ $('#installState').textContent = standalone ? '✅ Приложение уста
 
 /* ===== Морзе: язык, подвкладки ===== */
 let mLang = S.get('mLang', 'ru');
-seg($('#mLang'), [['ru', 'RU'], ['en', 'EN']], mLang, v => { mLang = v; S.set('mLang', v); renderDec(); renderAbc(); Rx.render(); });
+seg($('#mLang'), [['ru', 'RU'], ['en', 'EN']], mLang, v => { mLang = v; S.set('mLang', v); renderDec(); renderAbc(); Rx.render(true); padRender(); });
 seg($('#mSub'), [['rx', '📷 Приёмник'], ['dec', '⌨️ Декодер'], ['abc', '🔤 Азбука']], 'rx', v => {
   ['rx', 'dec', 'abc'].forEach(k => $('#m-' + k).hidden = k !== v);
   if (v !== 'rx') Rx.stop();
 });
 
 /* --- декодер: я пишу, что увидел --- */
-function decodeText(src, lang) {
-  return src.trim().split(/\s*[\/|]\s*|\s{3,}/).map(w => w.trim().split(/\s+/).map(c => decodeCode(c.replace(/·/g, '.').replace(/[–—_]/g, '-'), lang)).join('')).join(' ');
-}
+/* клавиатура iPhone сама меняет «...» на «…» и «--» на «—» — возвращаем обратно */
+const normCode = s => s.replace(/[·•∙⋅*●]/g, '.').replace(/…/g, '...').replace(/—/g, '--').replace(/[–−‒‑_]/g, '-').replace(/\\/g, '/');
+const splitWords = src => normCode(src).trim().split(/\s*[\/|]\s*|\s{3,}/).filter(Boolean).map(w => w.split(/\s+/).filter(Boolean));
+const decodeText = (src, lang) => splitWords(src).map(w => w.map(c => decodeCode(c, lang)).join('')).join(' ');
 function renderDec() {
-  const v = $('#decIn').value;
-  $('#decOut').textContent = v.trim() ? decodeText(v, mLang) : 'Здесь появится текст';
-  $('#decAlt').textContent = v.trim() ? (mLang === 'ru' ? 'Если латиница: ' : 'Если кириллица: ') + decodeText(v, mLang === 'ru' ? 'en' : 'ru') : '';
+  const inp = $('#decIn'), n = normCode(inp.value);
+  if (n !== inp.value) inp.value = n;
+  const v = n.trim(), words = splitWords(n);
+  $('#decOut').textContent = v ? decodeText(n, mLang) : 'Здесь появится текст';
+  $('#decAlt').textContent = v ? (mLang === 'ru' ? 'Если передавали латиницей: ' : 'Если передавали кириллицей: ') + decodeText(n, mLang === 'ru' ? 'en' : 'ru') : '';
+  $('#decChips').innerHTML = words.map(w => w.map(c => {
+    const ch = DEC[mLang][c], bad = !ch;
+    return `<span class="mchip${bad ? ' bad' : ''}"><b>${bad ? '?' : esc(ch)}</b><i>${esc(pretty(c))}</i></span>`;
+  }).join('')).join('<span class="mgap">/</span>');
+  $('#decWarn').hidden = !words.some(w => w.some(c => !DEC[mLang][c]));
 }
 $('#decIn').addEventListener('input', renderDec);
 $('.keys').addEventListener('click', e => {
@@ -655,9 +673,14 @@ $('.keys').addEventListener('click', e => {
   const inp = $('#decIn');
   if (k === 'back') inp.value = inp.value.replace(/( \/ |.)$/, '');
   else if (k === 'clr') inp.value = '';
+  else if (k === ' ') { if (!/(^|\s)$/.test(inp.value)) inp.value += ' '; }
+  else if (k === ' / ') { inp.value = inp.value.replace(/\s+$/, '') + (inp.value.trim() ? ' / ' : ''); }
   else inp.value += k;
   navigator.vibrate?.(k === '.' ? 20 : k === '-' ? 60 : 10);
   renderDec();
+});
+seg($('#decMode'), [['keys', '⌨️ Точки и тире'], ['tap', '👆 Отстучать ритм']], 'keys', v => {
+  $('#decKeys').hidden = v !== 'keys'; $('#decTap').hidden = v !== 'tap';
 });
 
 /* --- азбука --- */
@@ -677,78 +700,285 @@ $('#abcGrid').addEventListener('click', e => {
   navigator.vibrate?.(vib);
 });
 
-/* --- приёмник: распознаёт вспышки камерой --- */
+/* ===== распознавание Морзе по длительностям (общее для камеры и отстукивания) =====
+   Сигнал — чередование отрезков {s:1 свет | 0 темно, d: мс}. Скорость заранее неизвестна,
+   поэтому длительности раскладываются на группы: вспышки — точка/тире (1:3),
+   паузы — внутри буквы / между буквами / между словами (1:3:7). Текст пересчитывается целиком
+   при каждом новом отрезке, поэтому первые буквы уточняются, когда накопится статистика. */
+const median = xs => { const s = [...xs].sort((a, b) => a - b), n = s.length; return n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2; };
+function kmeansLog(vals, inits) {
+  const xs = vals.map(Math.log); let c = inits.map(Math.log), groups = [];
+  for (let it = 0; it < 25; it++) {
+    groups = c.map(() => []);
+    for (const x of xs) { let b = 0; for (let j = 1; j < c.length; j++) if (Math.abs(x - c[j]) < Math.abs(x - c[b])) b = j; groups[b].push(x); }
+    const nc = c.map((v, j) => groups[j].length ? groups[j].reduce((a, x) => a + x, 0) / groups[j].length : v);
+    const same = nc.every((v, j) => Math.abs(v - c[j]) < 1e-9); c = nc; if (same) break;
+  }
+  return groups.map((g, j) => ({ c: g.length ? Math.exp(median(g)) : Math.exp(c[j]), n: g.length }));
+}
+function estimateTiming(segs, prior, human) {
+  let marks = segs.filter(x => x.s && !x.live && x.d <= 3000).map(x => x.d);
+  let gaps = segs.filter(x => !x.s && !x.live && x.d <= 6000).map(x => x.d);
+  // редкие короткие помехи не должны сбивать оценку скорости
+  if (marks.length >= 4) { const md = median(marks); marks = marks.filter(d => d >= md * .2); }
+  if (gaps.length >= 4) { const mg = median(gaps); gaps = gaps.filter(d => d >= mg * .2); }
+  if (!marks.length) return timingModel(prior, 0, human);
+  marks = marks.slice(-80); gaps = gaps.slice(-80);
+  // гипотезы для старта: разные трактовки «что тут точка» + запомненная скорость
+  const mm = median(marks), cands = [[prior, 0], [mm, 0], [mm / 3, 0]];
+  const [k1, k2] = kmeansLog(marks, [Math.min(...marks), Math.max(...marks)]);
+  if (k1.n && k2.n && k2.c / k1.c >= 1.9) {
+    const ud = (k2.c - k1.c) / 2; // точка = u+b, тире = 3u+b → разность не зависит от смещения b
+    cands.push([k1.c, 0], [k2.c / 3, 0], [ud, k1.c - ud]);
+  }
+  if (gaps.length) cands.push([kmeansLog(gaps, [Math.min(...gaps), Math.max(...gaps)])[0].c, 0]);
+  let best = null;
+  for (const [u0, b0] of cands) {
+    if (!(u0 > 15)) continue;
+    const f = fitTiming(marks, gaps, u0, clamp(b0, -.35 * u0, .35 * u0));
+    // штрафы: большое смещение маловероятно; при равенстве — ближе к знакомой скорости
+    const score = f.cost + .06 * (f.b / f.u) ** 2 + .004 * Math.log(f.u / prior) ** 2;
+    if (!best || score < best.score) best = { ...f, score };
+  }
+  return timingModel(best.u, best.b, human);
+}
+/* модель: точка u+b, тире 3u+b; паузы u−b, 3u−b, 7u−b (b — смещение из-за задержек и экспозиции) */
+const MARK_K = [1, 3], GAP_K = [1, 3, 7];
+function nearestK(y, ks, f) { let bk = ks[0], br = Infinity; for (const k of ks) { const r = Math.abs(Math.log(y / f(k))); if (r < br) { br = r; bk = k; } } return [bk, br]; }
+function fitTiming(marks, gaps, u, b) {
+  const pass = (u, b, solve) => {
+    let A11 = 0, A12 = 0, A22 = 0, r1 = 0, r2 = 0, cost = 0, n = 0;
+    const add = (y, k, s) => { const w = 1 / k; A11 += w * k * k; A12 += w * k * s; A22 += w; r1 += w * k * y; r2 += w * s * y; };
+    for (const y of marks) { const [k, r] = nearestK(y, MARK_K, k => k * u + b); cost += r * r; n++; add(y, k, 1); }
+    for (const y of gaps) {
+      if (y > 10 * u - b) { n++; continue; } // длинная пауза — точно между словами, на скорость не влияет
+      const [k, r] = nearestK(y, GAP_K, k => k * u - b); cost += r * r; n++; add(y, k, -1);
+    }
+    if (!solve) return { cost: cost / Math.max(1, n) };
+    const det = A11 * A22 - A12 * A12;
+    let nu, nb;
+    if (det > 1e-9 * A11 * A22) { nu = (r1 * A22 - r2 * A12) / det; nb = (A11 * r2 - A12 * r1) / det; }
+    else { nu = r1 / A11; nb = 0; }
+    return { u: nu, b: clamp(nb, -.35 * nu, .35 * nu) };
+  };
+  for (let it = 0; it < 12; it++) {
+    const s = pass(u, b, true);
+    if (!(s.u > 15)) break;
+    const done = Math.abs(s.u - u) < .05 && Math.abs(s.b - b) < .05;
+    u = s.u; b = s.b; if (done) break;
+  }
+  return { u, b, cost: pass(u, b, false).cost };
+}
+function timingModel(u, b, human) {
+  // у камеры дрожь фронтов постоянна в мс → середина арифметическая; у человека дрожь пропорциональна длительности → геометрическая
+  const mid = human ? (x, y) => Math.sqrt(x * y) : (x, y) => (x + y) / 2;
+  const D = u + b, dash = 3 * u + b, G = u - b, L = 3 * u - b, W = 7 * u - b;
+  return { u, b, D, dash, markThr: mid(D, dash), letterThr: mid(G, L), wordThr: mid(L, W) };
+}
+/* убираем помехи: слишком короткие вспышки/провалы склеиваются с соседями */
+function cleanSegs(segs, minOn, minOff) {
+  const a = segs.map(x => ({ ...x }));
+  while (a.length > 1 && a[0].s && a[0].d < minOn) a.splice(0, 2);
+  for (let i = 1; i < a.length - 1; i++) {
+    const x = a[i];
+    if (x.d < (x.s ? minOn : minOff)) {
+      a[i - 1].d += x.d + a[i + 1].d; a[i - 1].live = a[i + 1].live; a.splice(i, 2); i = Math.max(0, i - 2);
+    }
+  }
+  return a;
+}
+function decodeSegs(segs, lang, prior, final, human) {
+  let a = cleanSegs(segs, 30, 30), e = estimateTiming(a, prior, human);
+  a = cleanSegs(a, e.D * .35, e.D * .3); e = estimateTiming(a, prior, human);
+  let text = '', marks = [], gaps = [];
+  const flush = () => { if (marks.length) text += readLetter(marks, gaps, e, lang); marks = []; gaps = []; };
+  for (const x of a) {
+    if (x.s) marks.push(x.d);
+    else if (x.d >= e.letterThr) { flush(); if (x.d >= e.wordThr && text && !text.endsWith(' ')) text += ' '; }
+    else if (marks.length) gaps.push(x.d);
+  }
+  let pending = '';
+  if (marks.length) { if (final) flush(); else pending = marks.map(d => d < e.markThr ? '.' : '-').join(''); }
+  return { text, pending, e };
+}
+/* буква по длительностям; если такого кода нет — чиним самое сомнительное место */
+function readLetter(marks, gaps, e, lang) {
+  const dict = DEC[lang], code = marks.map(d => d < e.markThr ? '.' : '-').join('');
+  const isLetter = ch => /^[\p{L}\p{N}]+$/u.test(ch);
+  let best = null;
+  if (dict[code]) {
+    if (isLetter(dict[code])) return dict[code];
+    best = { cost: .45, out: dict[code] }; // знак препинания: если правдоподобно делится на две буквы — делим
+  }
+  const consider = (cost, out) => { if (!best || cost < best.cost) best = { cost, out }; };
+  // точку приняли за тире или наоборот (только если код вообще не существует)
+  if (!dict[code]) marks.forEach((d, i) => {
+    const c = code.slice(0, i) + (code[i] === '.' ? '-' : '.') + code.slice(i + 1);
+    if (dict[c] && isLetter(dict[c])) consider(Math.abs(Math.log(d / e.markThr)), dict[c]);
+  });
+  // две буквы слились — пауза между ними вышла короче обычного
+  gaps.forEach((g, j) => {
+    if (j >= marks.length - 1) return;
+    const c1 = code.slice(0, j + 1), c2 = code.slice(j + 1);
+    if (dict[c1] && dict[c2] && isLetter(dict[c1] + dict[c2])) consider(Math.abs(Math.log(g / e.letterThr)), dict[c1] + dict[c2]);
+  });
+  return best ? best.out : '?';
+}
+class MorseListener {
+  constructor(human) { this.human = !!human; this.clear(); }
+  clear() { this.done = ''; this.segs = []; this.state = 0; this.t = 0; this.D = 0; }
+  get prior() { return S.get('mUnit', 200); }
+  breakMs() { return Math.max(3500, 12 * (this.D || this.prior)); }
+  edge(s, t) {
+    if (s === this.state) return;
+    const d = t - this.t;
+    if (s) { if (this.segs.length) { if (d > this.breakMs()) this.close(); else this.segs.push({ s: 0, d }); } }
+    else if (d > 4000) this.close(); // долгий ровный свет — это не сигнал
+    else this.segs.push({ s: 1, d });
+    this.state = s; this.t = t;
+  }
+  close() {
+    if (this.segs.length) {
+      const r = decodeSegs(this.segs, mLang, this.prior, true, this.human);
+      const tx = r.text.trim(); if (tx) this.done += tx + ' ';
+      if (this.segs.length >= 7 && !this.human) S.set('mUnit', Math.round(clamp(r.e.u, 40, 1500)));
+    }
+    this.segs = [];
+  }
+  view(now) {
+    if (!this.state && this.segs.length && now - this.t > this.breakMs()) this.close();
+    const segs = this.segs.slice();
+    if (this.segs.length || this.state) segs.push({ s: this.state, d: Math.max(0, now - this.t), live: true });
+    if (!segs.length) return { text: this.done, pending: '', D: this.D };
+    const r = decodeSegs(segs, mLang, this.prior, false, this.human); this.D = r.e.u;
+    return { text: this.done + r.text, pending: r.pending, D: r.e.u };
+  }
+  stop(t) { if (this.state) this.edge(0, t); this.close(); this.state = 0; }
+}
+const showListen = (r, curEl, textEl, ph) => {
+  curEl.textContent = r.pending ? pretty(r.pending) + '  → ' + decodeCode(r.pending, mLang) : (r.D ? `точка ≈ ${Math.round(r.D)} мс` : ' ');
+  textEl.textContent = r.text.trim() ? r.text : ph;
+};
+
+/* --- приёмник: камера смотрит на свет в рамке --- */
 const Rx = {
-  stream: null, raf: 0, cv: document.createElement('canvas'), lo: 255, hi: 0, on: false, tEdge: 0, unit: 0, cur: '', text: '', flushed: true, spaced: true,
+  L: new MorseListener(), stream: null, cv: document.createElement('canvas'), win: [], state: 0, cand: null, candN: 0,
+  lastVal: -1, now: 0, lastRender: 0, reg: null, regT: 0,
   async start() {
     if (this.stream) return;
     if (active === 'torch' || (active === 'mode' && Engine.useTorch)) stopAll(); // камеру занимает вспышка
     try {
-      this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 320 }, height: { ideal: 240 } }, audio: false });
+      this.stream = await navigator.mediaDevices.getUserMedia({ audio: false,
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 60 } } });
     } catch (e) { toast('⚠️ Нет доступа к камере — разрешите его в настройках браузера'); return; }
+    // чуть темнее экспозиция — фон темнее, вспышка ярче на его фоне
+    try {
+      const tr = this.stream.getVideoTracks()[0], c = tr.getCapabilities?.() || {};
+      if (c.exposureCompensation) await tr.applyConstraints({ advanced: [{ exposureCompensation: Math.max(c.exposureCompensation.min, -1.5) }] });
+    } catch {}
     const v = $('#rxVideo'); v.srcObject = this.stream; await v.play().catch(() => {});
     $('#rxStart').hidden = true; wake(true);
-    this.cv.width = 64; this.cv.height = 48; this.ctx = this.cv.getContext('2d', { willReadFrequently: true });
-    this.lo = 255; this.hi = 0; this.on = false; this.tEdge = performance.now(); this.unit = 0;
-    this.loop();
+    this.cv.width = this.cv.height = 64;
+    this.ctx = this.cv.getContext('2d', { willReadFrequently: true }); this.ctx.imageSmoothingQuality = 'high';
+    this.win = []; this.state = 0; this.cand = null; this.candN = 0; this.reg = null;
+    this.L.state = 0; this.L.t = performance.now();
+    this.next();
   },
   stop() {
-    cancelAnimationFrame(this.raf);
-    this.stream?.getTracks().forEach(t => t.stop()); this.stream = null;
+    if (!this.stream) return;
+    this.stream.getTracks().forEach(t => t.stop()); this.stream = null;
+    this.L.stop(this.now || performance.now()); this.state = 0; this.render(true);
     $('#rxVideo').srcObject = null; $('#rxStart').hidden = false; $('#rxLamp').classList.remove('on');
     if (!active) wake(false);
   },
-  loop() {
+  next() {
     const v = $('#rxVideo');
-    if (!this.stream) return;
-    if (v.readyState >= 2) {
-      this.ctx.drawImage(v, 0, 0, 64, 48);
-      const d = this.ctx.getImageData(20, 14, 24, 20).data; // центр кадра — рамка-прицел
-      let mx = 0, sum = 0;
-      for (let i = 0; i < d.length; i += 4) { const y = .3 * d[i] + .59 * d[i + 1] + .11 * d[i + 2]; sum += y; if (y > mx) mx = y; }
-      const val = .6 * mx + .4 * sum / (d.length / 4);
-      // медленно подстраиваем «темно» и «светло»
-      this.lo = val < this.lo ? val : this.lo + (val - this.lo) * .004;
-      this.hi = val > this.hi ? val : this.hi + (val - this.hi) * .004;
-      const range = this.hi - this.lo, ok = range > 22;
-      const thrOn = this.lo + range * .6, thrOff = this.lo + range * .4;
-      const now = performance.now();
-      const st = ok && (this.on ? val > thrOff : val > thrOn);
-      if (st !== this.on) {
-        const dur = now - this.tEdge;
-        if (this.on) this.mark(dur);
-        this.on = st; this.tEdge = now;
-      } else if (!this.on && this.unit) {
-        const gap = now - this.tEdge;
-        if (!this.flushed && gap > this.unit * 2.5) this.flush();
-        if (!this.spaced && gap > this.unit * 6) { this.text += ' '; this.spaced = true; this.render(); }
-      }
-      $('#rxLevel').style.width = clamp(val / 255) * 100 + '%';
-      $('#rxThr').style.left = clamp(thrOn / 255) * 100 + '%';
-      $('#rxLamp').classList.toggle('on', st);
-      $('#rxAim').classList.toggle('weak', !ok);
-    }
-    this.raf = requestAnimationFrame(() => this.loop());
+    if (v.requestVideoFrameCallback) v.requestVideoFrameCallback((now, md) => {
+      const ct = md.captureTime, t = ct && Math.abs(ct - performance.now()) < 1000 ? ct : (md.expectedDisplayTime || now);
+      this.frame(t, false);
+    });
+    else requestAnimationFrame(now => this.frame(now, true));
   },
-  mark(d) {
-    if (d < 35) return; // шум
-    if (!this.unit || d < this.unit * .5) this.unit = d;
-    const sym = d < this.unit * 2 ? '.' : '-';
-    if (sym === '.') this.unit = this.unit * .7 + d * .3;
-    this.cur += sym; this.flushed = false; this.spaced = false;
-    navigator.vibrate?.(sym === '.' ? 15 : 45);
+  /* какая часть кадра видна внутри жёлтой рамки (видео обрезано object-fit: cover) */
+  region(v) {
+    const now = performance.now();
+    if (this.reg && now - this.regT < 500) return this.reg;
+    const vw = v.videoWidth, vh = v.videoHeight, box = v.getBoundingClientRect(), aim = $('#rxAim').getBoundingClientRect();
+    const sc = Math.max(box.width / vw, box.height / vh), ox = (box.width - vw * sc) / 2, oy = (box.height - vh * sc) / 2;
+    let r = { x: (aim.left - box.left - ox) / sc, y: (aim.top - box.top - oy) / sc, w: aim.width / sc, h: aim.height / sc };
+    if (!(r.w > 4 && r.h > 4)) r = { x: vw * .33, y: vh * .33, w: vw * .34, h: vh * .34 };
+    this.regT = now; return this.reg = r;
+  },
+  measure(v) {
+    const r = this.region(v);
+    this.ctx.drawImage(v, r.x, r.y, r.w, r.h, 0, 0, 64, 64);
+    const d = this.ctx.getImageData(0, 0, 64, 64).data, hist = new Uint32Array(256);
+    for (let i = 0; i < d.length; i += 4) hist[(d[i] * 77 + d[i + 1] * 150 + d[i + 2] * 29) >> 8]++;
+    const need = 123; let sum = 0, n = 0; // средняя яркость 3% самых ярких точек
+    for (let b = 255; b >= 0 && n < need; b--) { const k = Math.min(hist[b], need - n); sum += k * b; n += k; }
+    return sum / n;
+  },
+  frame(t, viaRaf) {
+    if (!this.stream) return;
+    const v = $('#rxVideo');
+    if (v.readyState >= 2 && v.videoWidth) {
+      const val = this.measure(v);
+      if (!(viaRaf && val === this.lastVal)) { this.lastVal = val; this.process(t, val); }
+    }
+    this.next();
+  },
+  process(t, val) {
+    this.now = t;
+    this.win.push([t, val]);
+    while (this.win[0][0] < t - 5000) this.win.shift();
+    let lo = 255, hi = 0; for (const [, x] of this.win) { if (x < lo) lo = x; if (x > hi) hi = x; }
+    const range = hi - lo, ok = range >= 18, thrOn = lo + range * .58, thrOff = lo + range * .42;
+    const want = ok && (this.state ? val > thrOff : val > thrOn) ? 1 : 0;
+    // новое состояние принимаем, только если оно держится 2 кадра подряд (отсекаем мерцание)
+    if (want !== this.state) {
+      if (this.cand === null) this.cand = t;
+      if (++this.candN >= 2) {
+        this.state = want; this.L.edge(want, this.cand); this.cand = null; this.candN = 0;
+        if (want) navigator.vibrate?.(12);
+      }
+    } else { this.cand = null; this.candN = 0; }
+    $('#rxLevel').style.width = clamp(val / 255) * 100 + '%';
+    $('#rxThr').style.left = clamp(thrOn / 255) * 100 + '%';
+    $('#rxLamp').classList.toggle('on', !!this.state);
+    $('#rxAim').classList.toggle('weak', !ok);
     this.render();
   },
-  flush() { this.text += decodeCode(this.cur, mLang); this.cur = ''; this.flushed = true; this.render(); },
-  render() {
-    $('#rxCur').textContent = this.cur ? pretty(this.cur) + '  → ' + decodeCode(this.cur, mLang) : (this.unit ? `точка ≈ ${Math.round(this.unit)} мс` : ' ');
-    $('#rxText').textContent = this.text || 'Распознанный текст появится здесь';
+  render(force) {
+    const now = performance.now();
+    if (!force && now - this.lastRender < 90) return;
+    this.lastRender = now;
+    showListen(this.L.view(this.stream ? this.now : now), $('#rxCur'), $('#rxText'), 'Распознанный текст появится здесь');
   }
 };
 $('#rxStart').onclick = () => Rx.start();
 $('#rxStop').onclick = () => Rx.stop();
-$('#rxClear').onclick = () => { Rx.text = ''; Rx.cur = ''; Rx.unit = 0; Rx.render(); };
-renderDec(); renderAbc(); Rx.render();
+$('#rxClear').onclick = () => { Rx.L.clear(); Rx.L.state = Rx.state; Rx.L.t = Rx.now; Rx.render(true); };
+
+/* --- отстукивание: нажимаю в ритм того, что вижу --- */
+const Pad = { L: new MorseListener(true), iv: 0 };
+const padEl = $('#tapPad');
+const padRender = () => showListen(Pad.L.view(performance.now()), $('#tapCur'), $('#tapText'), 'Нажимайте на кнопку в ритм вспышек');
+const padEdge = s => {
+  if (s === Pad.L.state) return;
+  Pad.L.edge(s, performance.now()); padEl.classList.toggle('on', !!s);
+  if (s) navigator.vibrate?.(8);
+  clearInterval(Pad.iv); Pad.iv = setInterval(() => { padRender(); if (!Pad.L.state && !Pad.L.segs.length) clearInterval(Pad.iv); }, 100);
+  padRender();
+};
+padEl.addEventListener('pointerdown', e => { e.preventDefault(); padEl.setPointerCapture?.(e.pointerId); padEdge(1); });
+['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => padEl.addEventListener(ev, () => padEdge(0)));
+padEl.addEventListener('contextmenu', e => e.preventDefault());
+$('#tapClear').onclick = () => { Pad.L.clear(); padRender(); };
+const copyText = t => { const s = t.trim(); if (!s) return; navigator.clipboard?.writeText(s).then(() => toast('📋 Скопировано'), () => toast(s)); };
+$('#tapCopy').onclick = () => copyText(Pad.L.view(performance.now()).text);
+$('#rxCopy').onclick = () => copyText(Rx.L.view(Rx.now || performance.now()).text);
+
+renderDec(); renderAbc(); Rx.render(true); padRender();
 
 /* ===== вкладки ===== */
 document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => {

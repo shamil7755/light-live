@@ -71,16 +71,27 @@
         <div class="levelbar"><div id="rxLevel"></div><i id="rxThr"></i></div>
         <div class="rxcur" id="rxCur">&nbsp;</div>
         <div class="rxtext" id="rxText"></div>
-        <div class="row gap"><button class="btn ghost" id="rxClear">Очистить</button><button class="btn ghost" id="rxStop">Стоп</button></div>
-        <p class="dim">Наведите рамку на мигающий свет и держите телефон неподвижно. Лучше всего работает в темноте. Точки и тире программа различает сама, скорость подстраивается автоматически.</p>
+        <div class="row gap"><button class="btn ghost" id="rxClear">Очистить</button><button class="btn ghost" id="rxCopy">Копировать</button><button class="btn ghost" id="rxStop">Стоп</button></div>
+        <p class="dim">Наведите жёлтую рамку на мигающий свет и держите телефон неподвижно (лучше упереть). Когда свет попадает в рамку, загорается жёлтый кружок в углу. Скорость и точки/тире определяются сами, первые буквы уточняются через пару секунд. Лучше всего в темноте и на скорости передачи 1× или медленнее.</p>
       </div>
       <div id="m-dec" class="msub" hidden>
-        <input type="text" id="decIn" placeholder="Например: ... --- ...   (пробел — между буквами, / — между словами)" autocomplete="off" autocapitalize="off" spellcheck="false">
-        <div class="keys">
-          <button data-k=".">·</button><button data-k="-">–</button><button data-k=" ">⎵ буква</button><button data-k=" / ">/ слово</button><button data-k="back">⌫</button><button data-k="clr">✕</button>
+        <div class="seg" id="decMode"></div>
+        <div id="decKeys">
+          <input type="text" id="decIn" placeholder="Например: ... --- ...   (пробел — между буквами, / — между словами)" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+          <div class="keys">
+            <button data-k=".">·</button><button data-k="-">–</button><button data-k=" ">⎵ буква</button><button data-k=" / ">/ слово</button><button data-k="back">⌫</button><button data-k="clr">✕</button>
+          </div>
+          <div class="decout" id="decOut"></div>
+          <div class="mchips" id="decChips"></div>
+          <p class="warn" id="decWarn" hidden>«?» — такого кода нет. Скорее всего, две буквы слились: поставьте между ними «⎵ буква».</p>
+          <p class="dim" id="decAlt"></p>
         </div>
-        <div class="decout" id="decOut"></div>
-        <p class="dim" id="decAlt"></p>
+        <div id="decTap" hidden>
+          <button class="tappad" id="tapPad">👆<b>Нажимайте в ритм вспышек</b><small>короткое нажатие — точка, длинное — тире.<br>Паузы между буквами и словами определятся сами.</small></button>
+          <div class="rxcur" id="tapCur">&nbsp;</div>
+          <div class="rxtext" id="tapText"></div>
+          <div class="row gap"><button class="btn ghost" id="tapClear">Очистить</button><button class="btn ghost" id="tapCopy">Копировать</button></div>
+        </div>
       </div>
       <div id="m-abc" class="msub" hidden>
         <p class="dim">Нажмите на букву — она мигнёт и провибрирует своим кодом. Точка — 1 единица, тире — 3, пауза между буквами — 3, между словами — 7.</p>
@@ -131,18 +142,20 @@
 <div id="stage" hidden>
   <div id="glow"></div>
   <div id="ticker"><span id="tickerText"></span></div>
+  <div id="stageLabel"></div>
+  <div id="bubble"><div class="bar"><div id="bubbleFill"></div></div><span id="bubbleTxt"></span></div>
   <div class="stage-ui">
-    <div class="stage-top">
+    <div class="stage-top ctl">
       <div id="stageTitle"></div>
       <div id="stageCountdown"></div>
     </div>
-    <div id="stageLabel"></div>
-    <div id="bubble"><div class="bar"><div id="bubbleFill"></div></div><span id="bubbleTxt"></span></div>
-    <div class="stage-bottom">
-      <button id="lockBtn" class="round">🔓</button>
-      <button id="stopBtn" class="round stop">■</button>
+    <div class="stage-foot ctl">
+      <div class="stage-bottom">
+        <button id="lockBtn" class="round">🔓</button>
+        <button id="stopBtn" class="round stop">■</button>
+      </div>
+      <p id="stageHint">Двойной тап — выключить · свайп — яркость</p>
     </div>
-    <p id="stageHint">Двойной тап — выключить · свайп — яркость</p>
   </div>
 </div>
 

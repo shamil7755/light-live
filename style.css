@@ -61,21 +61,24 @@ nav button.active{color:var(--ac)}nav button.active span{filter:none;opacity:1}
 #stage{position:fixed;inset:0;background:#000;z-index:50;touch-action:none;overflow:hidden}
 #glow{position:absolute;inset:0;background:#fff;opacity:0}
 #glow.fade{transition:opacity .45s}
-.stage-ui{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:calc(20px + var(--st)) 20px calc(24px + var(--sb));transition:opacity .4s;pointer-events:none}
+.stage-ui{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:calc(20px + var(--st)) 20px calc(24px + var(--sb));pointer-events:none}
 .stage-ui button{pointer-events:auto}
-#stage.idle .stage-ui{opacity:0}
-#stage.idle .stage-ui button{pointer-events:none}
+/* через 3 сек кнопки и подписи полностью исчезают (visibility — надёжно и на iPhone) */
+.ctl{transition:opacity .4s,visibility 0s}
+#stage.idle .ctl{opacity:0;visibility:hidden;transition:opacity .4s,visibility 0s .4s}
+#stage.idle .ctl button{pointer-events:none}
+.stage-foot{display:flex;flex-direction:column;align-items:center}
 .stage-top{text-align:center;mix-blend-mode:difference;color:#fff}
 #stageTitle{font-size:20px;font-weight:700}
 #stageCountdown{font-size:14px;opacity:.8}
-#stageLabel{font-size:64px;font-weight:800;color:#fff;mix-blend-mode:difference;min-height:80px;text-align:center;font-variant-numeric:tabular-nums}
-#bubble{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(.9);opacity:0;transition:.25s;background:#000a;color:#fff;border-radius:24px;padding:16px 26px;display:flex;align-items:center;gap:16px;backdrop-filter:blur(8px)}
+#stageLabel{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:64px;font-weight:800;line-height:1.15;color:#fff;mix-blend-mode:difference;text-align:center;white-space:pre-line;font-variant-numeric:tabular-nums;pointer-events:none}
+#bubble{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(.9);opacity:0;transition:.25s;background:#000c;color:#fff;border-radius:24px;padding:16px 26px;display:flex;align-items:center;gap:16px;pointer-events:none;z-index:2}
 #bubble.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
 #bubble .bar{width:10px;height:90px;border-radius:8px;background:#fff3;position:relative;overflow:hidden}
 #bubbleFill{position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:8px}
 #bubbleTxt{font-size:44px;font-weight:800;font-variant-numeric:tabular-nums;min-width:110px}
 .stage-bottom{display:flex;gap:24px}
-.round{width:64px;height:64px;border-radius:50%;background:#000a;color:#fff;font-size:24px;backdrop-filter:blur(8px);border:1px solid #fff3}
+.round{width:64px;height:64px;border-radius:50%;background:#000b;color:#fff;font-size:24px;border:1px solid #fff3}
 .round.stop{background:#c62828dd}
 #stage.locked .stop{display:none}
 #stage.locked #lockBtn{background:var(--ac);color:#000}
@@ -132,7 +135,7 @@ nav button.active{color:var(--ac)}nav button.active span{filter:none;opacity:1}
 .msub[hidden]{display:none}
 .cam{position:relative;width:100%;aspect-ratio:4/3;background:#000;border-radius:18px;overflow:hidden;border:1px solid var(--line)}
 .cam video{width:100%;height:100%;object-fit:cover}
-.aim{position:absolute;left:31.25%;top:29%;width:37.5%;height:42%;border:3px solid var(--ac);border-radius:14px;box-shadow:0 0 0 999px #0006}
+.aim{position:absolute;left:50%;top:50%;width:36%;aspect-ratio:1;transform:translate(-50%,-50%);border:3px solid var(--ac);border-radius:14px;box-shadow:0 0 0 999px #0006}
 .aim.weak{border-color:#ffffff66}
 .rxlamp{position:absolute;top:12px;right:12px;width:22px;height:22px;border-radius:50%;background:#333;border:2px solid #fff4}
 .rxlamp.on{background:var(--ac);box-shadow:0 0 20px var(--ac)}
@@ -154,3 +157,17 @@ nav button.active{color:var(--ac)}nav button.active span{filter:none;opacity:1}
 .abcell b{font-size:22px}.abcell span{font-size:16px;color:var(--ac);letter-spacing:1px}
 .abcell.lit{background:var(--ac)}.abcell.lit b,.abcell.lit span{color:#000}
 nav button{font-size:10px}
+
+/* v3: декодер, отстукивание */
+.mchips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}
+.mchip{display:flex;flex-direction:column;align-items:center;min-width:44px;padding:6px 8px;border-radius:10px;background:var(--card);border:1px solid var(--line)}
+.mchip b{font-size:18px}.mchip i{font-style:normal;font-size:12px;color:var(--ac);letter-spacing:1px}
+.mchip.bad{border-color:#ff5a5a;background:#2a1414}.mchip.bad b{color:#ff7a7a}
+.mgap{align-self:center;color:var(--dim);padding:0 2px}
+.warn{color:#ff9a7a;font-size:13px;margin:4px 0}
+.warn[hidden],#decKeys[hidden],#decTap[hidden]{display:none}
+#decMode{margin-bottom:10px}
+.tappad{width:100%;height:200px;border-radius:22px;background:radial-gradient(circle at 50% 40%,#2a2a36,#15151d);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:40px;touch-action:none;-webkit-touch-callout:none;transition:background .05s,box-shadow .05s}
+.tappad b{font-size:17px}.tappad small{font-size:12px;color:var(--dim);line-height:1.35}
+.tappad.on{background:radial-gradient(circle at 50% 40%,#fff6c8,var(--ac));color:#1a1400;box-shadow:0 0 40px #ffd23f88}
+.tappad.on small{color:#3a2c00}
