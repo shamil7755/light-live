@@ -33,7 +33,8 @@
   <section id="tab-screen" class="tab">
     <header><h1>Свет экрана</h1></header>
     <div class="area" id="screenArea">
-      <div class="orb" id="orb"></div>
+      <div class="phone" id="phonePrev"><div class="orb" id="orb"></div></div>
+      <button class="btn ghost small" id="areaBtn">✂️ Область света: <b id="areaName">весь экран</b></button>
       <div class="pct" id="screenPct">100%</div>
       <p class="hint">Двойной тап — включить свет<br>Свайп вверх/вниз — яркость</p>
       <div class="colors" id="colors"></div>
@@ -59,14 +60,41 @@
   <!-- МОРЗЕ -->
   <section id="tab-morse" class="tab">
     <header><h1>Морзе</h1><div class="seg mini" id="mLang"><button data-v="ru" class="sel">RU</button><button data-v="en">EN</button></div></header>
-    <div class="seg subtabs" id="mSub"><button data-v="rx" class="sel">📷 Приёмник</button><button data-v="dec">⌨️ Декодер</button><button data-v="abc">🔤 Азбука</button></div>
+    <div class="seg subtabs" id="mSub"></div>
     <div class="scroll">
-      <div id="m-rx" class="msub">
-        <div class="cam">
+      <div id="m-chat" class="msub">
+        <div class="chatset">
+          <div class="seg" id="chatHow"></div>
+          <div class="seg" id="chatProto"></div>
+        </div>
+        <div id="chatCamSlot"></div>
+        <div class="chatlist" id="chatList"></div>
+        <div class="chatin">
+          <input type="text" id="chatIn" placeholder="Сообщение…" maxlength="200" autocomplete="off">
+          <button class="send" id="chatSend" aria-label="Отправить">➤</button>
+        </div>
+        <p class="dim" id="chatHint"></p>
+      </div>
+      <div id="m-tx" class="msub" hidden>
+        <div class="card">
+          <h3>📤 Передать текст светом</h3>
+          <input type="text" id="txIn" class="search" placeholder="Текст для передачи…" maxlength="200" autocomplete="off">
+          <label class="lbl">Способ</label><div class="seg" id="txProto"></div>
+          <label class="lbl">Чем светить</label><div class="seg" id="txHow"></div>
+          <button class="btn" id="txGo">▶ Передать</button>
+          <p class="dim" id="txHint"></p>
+        </div>
+        <div class="cat">Готовые сигналы</div>
+        <div class="grid" id="txModes"></div>
+      </div>
+      <div id="m-rx" class="msub" hidden>
+        <div id="camHome"></div>
+        <div class="cam" id="cam">
           <video id="rxVideo" playsinline muted autoplay></video>
           <div class="aim" id="rxAim"></div>
           <div class="rxlamp" id="rxLamp"></div>
           <button id="rxStart" class="btn camstart">📷 Включить приёмник</button>
+          <button id="rxFlip" class="flip" aria-label="Сменить камеру">🔄</button>
         </div>
         <div class="levelbar"><div id="rxLevel"></div><i id="rxThr"></i></div>
         <div class="rxcur" id="rxCur">&nbsp;</div>
@@ -139,7 +167,7 @@
 </nav>
 
 <!-- Полноэкранная сцена света -->
-<div id="stage" hidden>
+<div id="stage" hidden><div id="stageRot">
   <div id="glow"></div>
   <div id="ticker"><span id="tickerText"></span></div>
   <div id="stageLabel"></div>
@@ -151,13 +179,14 @@
     </div>
     <div class="stage-foot ctl">
       <div class="stage-bottom">
+        <button id="rotBtn" class="round" aria-label="Поворот экрана">🔄</button>
         <button id="lockBtn" class="round">🔓</button>
         <button id="stopBtn" class="round stop">■</button>
       </div>
       <p id="stageHint">Двойной тап — выключить · свайп — яркость</p>
     </div>
   </div>
-</div>
+</div></div>
 
 <!-- Шторка запуска режима -->
 <div id="sheet" hidden>
@@ -167,11 +196,31 @@
     <div id="shSpeedWrap"><label>Скорость <b id="shSpeedV">1×</b></label><input type="range" id="shSpeed" min="0.25" max="3" step="0.25" value="1"></div>
     <div id="shTargetWrap"><label>Чем светить</label><div class="seg" id="shTarget"></div></div>
     <label>Автовыключение</label><div class="seg" id="shTimer"></div>
-    <div class="sheet-actions"><button id="shCancel" class="btn ghost">Отмена</button><button id="shStart" class="btn">▶ Старт</button></div>
+    <div class="sheet-actions"><button id="shCancel" class="btn ghost">Отмена</button><button id="shSched" class="btn ghost" title="Таймер или будильник">⏰</button><button id="shStart" class="btn">▶ Старт</button></div>
   </div>
 </div>
 
+<div id="dlg" hidden><div class="dlg-body" id="dlgBody"></div></div>
+<div id="waitBox" hidden>
+  <div class="wait-ic" id="waitIc">⏰</div>
+  <div class="wait-name" id="waitName"></div>
+  <div class="wait-time" id="waitTime">00:00</div>
+  <div class="wait-at" id="waitAt"></div>
+  <p class="dim center">Не закрывайте приложение и не блокируйте телефон — экран притушен и не погаснет сам.</p>
+  <button class="btn ghost" id="waitCancel">Отменить</button>
+</div>
+<div id="areaEd" hidden>
+  <div id="areaLight"></div>
+  <div id="areaBox"><i data-h="nw"></i><i data-h="ne"></i><i data-h="sw"></i><i data-h="se"></i></div>
+  <div class="area-ui">
+    <p>Двигайте рамку пальцем, тяните за углы — светиться будет только эта часть</p>
+    <div class="seg" id="areaShape"></div>
+    <div class="seg" id="areaPreset"></div>
+    <div class="row gap"><button class="btn ghost" id="areaReset">Весь экран</button><button class="btn" id="areaOk">Готово</button></div>
+  </div>
+</div>
 <div id="toast"></div>
 <script src="app.js"></script>
+<script src="extra.js"></script>
 </body>
 </html>

@@ -136,29 +136,29 @@ const MODES = [
   // Сигналы
   { id: 'sos', cat: 'Сигналы', ic: '🆘', name: 'SOS', desc: '··· ––– ··· — международный сигнал бедствия',
     init: st => st.f = seq(codeItems('...---...', 'SOS'), U), f: (t, st) => st.f(t) },
-  { id: 'morse', cat: 'Сигналы', ic: '📡', name: 'Морзе', desc: 'Передать свой текст азбукой Морзе',
+  { id: 'morse', cat: 'Сигналы', ic: '📡', name: 'Морзе: свой текст', desc: 'Напишите текст — он передастся азбукой Морзе',
     param: { key: 'text', type: 'text', label: 'Текст (рус/англ/цифры)', def: 'ПРИВЕТ' },
     init: (st, p) => st.f = seq(morseItems(p.text), U), f: (t, st) => st.f(t) },
-  { id: 'help', cat: 'Сигналы', ic: '🙏', name: 'ПОМОГИТЕ', desc: 'Слово «помогите» азбукой Морзе', ...seqMode(morseItems('ПОМОГИТЕ'), U) },
-  { id: 'ok', cat: 'Сигналы', ic: '👌', name: 'OK', desc: '«Всё в порядке» — Морзе', ...seqMode(morseItems('OK'), U) },
-  { id: 'here', cat: 'Сигналы', ic: '📍', name: 'Я здесь', desc: 'Двойной проблеск каждые 3 сек — чтобы вас нашли',
+  { id: 'help', cat: 'Сигналы', ic: '🙏', name: 'ПОМОГИТЕ', desc: 'Слово «помогите» азбукой Морзе, по-русски', ...seqMode(morseItems('ПОМОГИТЕ'), U) },
+  { id: 'ok', cat: 'Сигналы', ic: '👌', name: 'OK', desc: '«Всё в порядке» азбукой Морзе', ...seqMode(morseItems('OK'), U) },
+  { id: 'here', cat: 'Сигналы', ic: '📍', name: 'Я здесь', desc: 'Две короткие вспышки каждые 3 сек — чтобы вас заметили и нашли',
     ...seqMode([[1, 1], [0, 1.5], [1, 1], [0, 26.5]], 100) },
-  { id: 'three', cat: 'Сигналы', ic: '⛰️', name: 'Три сигнала', desc: '3 вспышки — сигнал бедствия в горах',
+  { id: 'three', cat: 'Сигналы', ic: '⛰️', name: 'Три сигнала', desc: 'Три вспышки и пауза — сигнал «нужна помощь» в горах и походах',
     ...seqMode([[1, 5, '1'], [0, 5, '1'], [1, 5, '2'], [0, 5, '2'], [1, 5, '3'], [0, 30, '']], 100) },
-  { id: 'beacon', cat: 'Сигналы', ic: '🗼', name: 'Маяк', desc: 'Одна вспышка раз в 5 секунд', ...seqMode([[1, 2], [0, 48]], 100) },
-  { id: 'strobe', cat: 'Сигналы', ic: '⚡', name: 'Стробоскоп', desc: 'Частые вспышки',
+  { id: 'beacon', cat: 'Сигналы', ic: '🗼', name: 'Маяк', desc: 'Одна вспышка раз в 5 сек — экономно и видно издалека', ...seqMode([[1, 2], [0, 48]], 100) },
+  { id: 'strobe', cat: 'Сигналы', ic: '⚡', name: 'Стробоскоп', desc: 'Частые вспышки, частота настраивается',
     param: { key: 'hz', type: 'range', label: 'Частота', min: 1, max: 15, step: 1, def: 6, unit: ' Гц' },
     f: (t, st, p) => ({ l: (t * p.hz % 1) < .5 ? 1 : 0 }) },
-  { id: 'bike', cat: 'Сигналы', ic: '🚲', name: 'Велофонарь', desc: 'Двойные вспышки — вас видно на дороге', ...seqMode([[1, .7], [0, .8], [1, .7], [0, 7.8]], 100) },
-  { id: 'custom', cat: 'Сигналы', ic: '✍️', name: 'Свой паттерн', desc: 'Точка — коротко, тире — длинно, пробел — пауза',
-    param: { key: 'pat', type: 'text', label: 'Паттерн, например: ..--  .-.', def: '.-.- --  ...' },
+  { id: 'bike', cat: 'Сигналы', ic: '🚲', name: 'Велофонарь', desc: 'Двойные вспышки, как у велофары — вас видно на дороге', ...seqMode([[1, .7], [0, .8], [1, .7], [0, 7.8]], 100) },
+  { id: 'custom', cat: 'Сигналы', ic: '✍️', name: 'Свой ритм', desc: 'Свой рисунок: точка — короткая вспышка, тире — длинная',
+    param: { key: 'pat', type: 'text', label: 'Ритм: «.» коротко, «-» длинно, пробел — пауза', def: '.-.- --  ...' },
     init: (st, p) => st.f = seq(codeItems(p.pat || '.', pretty(p.pat || '.')), U), f: (t, st) => st.f(t) },
 
   // Эффекты
   { id: 'breath', cat: 'Эффекты', ic: '🌬️', name: 'Дыхание', desc: 'Плавный подъём яркости и затухание',
     param: { key: 'per', type: 'range', label: 'Длина вдоха-выдоха', min: 2, max: 12, step: 1, def: 4, unit: ' сек' },
     f: (t, st, p) => ({ l: (1 - Math.cos(t * 2 * Math.PI / p.per)) / 2 }) },
-  { id: 'heart', cat: 'Эффекты', ic: '❤️', name: 'Пульс', desc: 'Тук-тук… как сердце',
+  { id: 'heart', cat: 'Эффекты', ic: '❤️', name: 'Пульс', desc: 'Свет бьётся как сердце: тук-тук… пауза',
     param: { key: 'bpm', type: 'range', label: 'Пульс', min: 40, max: 180, step: 5, def: 70, unit: ' уд/мин' },
     f: (t, st, p) => { const x = (t * p.bpm / 60) % 1; return { l: Math.max(Math.exp(-(((x - .06) / .04) ** 2)), .75 * Math.exp(-(((x - .28) / .05) ** 2))), c: '#ff2d55' }; } },
   { id: 'candle', cat: 'Эффекты', ic: '🕯️', name: 'Свеча', desc: 'Живое тёплое мерцание',
@@ -175,16 +175,16 @@ const MODES = [
       }
       return { l: st.fl.some(([a, b]) => t >= a && t < b) ? 1 : 0, c: '#dfe7ff' };
     } },
-  { id: 'police', cat: 'Эффекты', ic: '🚓', name: 'Мигалка', desc: 'Красный-синий, как у полиции',
+  { id: 'police', cat: 'Эффекты', ic: '🚓', name: 'Полиция', desc: 'Красный и синий по очереди',
     f: t => { const x = t % 1, y = x % .5; return { l: (y < .08 || (y > .14 && y < .22)) ? 1 : 0, c: x < .5 ? '#ff1a1a' : '#1a4dff' }; } },
-  { id: 'amb', cat: 'Эффекты', ic: '🚨', name: 'Аварийка', desc: 'Оранжевый поворотник',
+  { id: 'amb', cat: 'Эффекты', ic: '🚨', name: 'Аварийка', desc: 'Оранжевое мигание, как аварийка у машины',
     f: t => ({ l: (t % 1) < .45 ? 1 : 0, c: '#ff9500' }) },
-  { id: 'disco', cat: 'Эффекты', ic: '🪩', name: 'Дискотека', desc: 'Случайные цвета в ритм',
+  { id: 'disco', cat: 'Эффекты', ic: '🪩', name: 'Дискотека', desc: 'Случайные цвета вспыхивают в ритм музыки',
     param: { key: 'bpm', type: 'range', label: 'Темп', min: 60, max: 180, step: 5, def: 120, unit: ' BPM' },
     f: (t, st, p) => { const b = t * p.bpm / 60 * 2, i = Math.floor(b); if (st.i !== i) { st.i = i; st.h = Math.random() * 360; } return { l: (b % 1) < .6 ? 1 : 0, c: `hsl(${st.h},100%,55%)` }; } },
-  { id: 'rainbow', cat: 'Эффекты', ic: '🌈', name: 'Радуга', desc: 'Плавная смена цветов экрана',
+  { id: 'rainbow', cat: 'Эффекты', ic: '🌈', name: 'Радуга', desc: 'Цвета радуги плавно сменяют друг друга',
     f: t => ({ l: 1, c: `hsl(${(t * 40) % 360},100%,55%)` }) },
-  { id: 'mic', cat: 'Эффекты', ic: '🎵', name: 'Цветомузыка', desc: 'Мигает в такт звуку (нужен микрофон)', noSpeed: true,
+  { id: 'mic', cat: 'Эффекты', ic: '🎵', name: 'Цветомузыка', desc: 'Мигает в такт музыке рядом (нужен микрофон)', noSpeed: true,
     param: { key: 'sens', type: 'range', label: 'Чувствительность', min: 1, max: 10, step: 1, def: 5, unit: '' },
     async init(st) {
       st.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -205,17 +205,17 @@ const MODES = [
     stop: st => { st.stream?.getTracks().forEach(t => t.stop()); st.ctx?.close(); } },
 
   // Полезное
-  { id: 'sunrise', cat: 'Полезное', ic: '🌅', name: 'Рассвет', desc: 'Медленный подъём света — мягкое пробуждение', noSpeed: true,
+  { id: 'sunrise', cat: 'Полезное', ic: '🌅', name: 'Рассвет', desc: 'Свет медленно разгорается — мягко будит утром', noSpeed: true,
     param: { key: 'min', type: 'range', label: 'Длительность', min: 1, max: 30, step: 1, def: 10, unit: ' мин' },
     f: (t, st, p, rt) => { const k = clamp(rt / (p.min * 60)); return { l: .02 + .98 * k * k, c: `hsl(${10 + k * 35},100%,${45 + k * 55}%)`, label: Math.round(k * 100) + '%' }; } },
-  { id: 'sunset', cat: 'Полезное', ic: '🌇', name: 'Закат', desc: 'Плавное затухание и выключение — для сна', noSpeed: true,
+  { id: 'sunset', cat: 'Полезное', ic: '🌇', name: 'Закат', desc: 'Свет медленно гаснет и выключается — помогает уснуть', noSpeed: true,
     param: { key: 'min', type: 'range', label: 'Длительность', min: 1, max: 30, step: 1, def: 10, unit: ' мин' },
     f: (t, st, p, rt) => { const k = 1 - rt / (p.min * 60); if (k <= 0) return { l: 0, done: true }; return { l: k * k, c: `hsl(${15 + k * 25},100%,${40 + k * 25}%)` }; } },
-  { id: 'night', cat: 'Полезное', ic: '🔴', name: 'Ночной красный', desc: 'Не сбивает ночное зрение', screenOnly: true, noSpeed: true,
+  { id: 'night', cat: 'Полезное', ic: '🔴', name: 'Ночной красный', desc: 'Тусклый красный: глаза не отвыкают от темноты', screenOnly: true, noSpeed: true,
     f: () => ({ l: 1, c: '#ff0000' }) },
-  { id: 'ticker', cat: 'Полезное', ic: '🪧', name: 'Табло', desc: 'Бегущая строка огромными буквами', screenOnly: true, ticker: true,
+  { id: 'ticker', cat: 'Полезное', ic: '🪧', name: 'Бегущая строка', desc: 'Ваш текст огромными буквами через весь экран', screenOnly: true, ticker: true,
     param: { key: 'text', type: 'text', label: 'Текст', def: 'ПРИВЕТ!' }, f: () => ({ l: 0 }) },
-  { id: 'metro', cat: 'Полезное', ic: '🎼', name: 'Метроном', desc: 'Вспышка на каждый удар, акцент на первом', noSpeed: true,
+  { id: 'metro', cat: 'Полезное', ic: '🎼', name: 'Метроном', desc: 'Вспышка на каждый удар, первый удар — красный', noSpeed: true,
     param: { key: 'bpm', type: 'range', label: 'Темп', min: 30, max: 240, step: 2, def: 100, unit: ' BPM' },
     f: (t, st, p) => { const b = t * p.bpm / 60, beat = Math.floor(b) % 4; return { l: (b % 1) < .12 ? 1 : 0, c: beat === 0 ? '#ff2d55' : '#ffffff', label: String(beat + 1) }; } },
 ];
@@ -230,32 +230,34 @@ const PALETTE = [['Белый', '#ffffff'], ['Тёплый белый', '#ffd9a0
   ['Жёлтый', '#ffe600'], ['Лайм', '#a8ff00'], ['Зелёный', '#00ff4c'], ['Бирюзовый', '#00ffd0'], ['Голубой', '#00c8ff'], ['Синий', '#1a4dff'],
   ['Фиолетовый', '#8a2bff'], ['Пурпурный', '#ff00ff'], ['Розовый', '#ff5fa8'], ['Коралловый', '#ff6f50'], ['Мятный', '#7dffc0'],
   ['Лавандовый', '#b9a2ff'], ['Персиковый', '#ffb38a'], ['Золотой', '#ffc42a'], ['Небесный', '#87cfff']];
+const COLOR_NAMES = Object.fromEntries([["#ff5e00","оранжевый"],["#ff007b","малиновый"],["#7b2bff","фиолетовый"],["#0033ff","синий"],["#00c8ff","голубой"],["#00ffb3","бирюзовый"],["#0b6b1f","тёмно-зелёный"],["#5cff3a","зелёный"],["#c8ff70","салатовый"],["#ff1a00","красный"],["#ff8a00","оранжевый"],["#ffcc00","жёлтый"],["#00ff9d","изумрудный"],["#8a2bff","фиолетовый"],["#ff00ff","пурпурный"],["#00ffff","бирюзовый"],["#ffb7d5","нежно-розовый"],["#ffffff","белый"],["#ff6fa8","розовый"],["#dcecff","холодный белый"],["#87cfff","небесный"],["#a8ff00","лайм"],["#00ff4c","зелёный"],["#e6ff00","лимонный"],["#ff6a00","оранжевый"],["#7b00ff","фиолетовый"],["#ff1a1a","красный"],["#00c853","зелёный"],["#ffd700","золотой"],["#1a0066","тёмно-синий"],["#ff00aa","малиновый"],["#ffcc80","песочный"],["#ff8a50","терракотовый"],["#ffe0a0","кремовый"],["#000a40","глубокий синий"],["#0044aa","синий"],["#ff5fa8","розовый"],["#7dffc0","мятный"],["#b9a2ff","лавандовый"],["#ff3300","огненный"],["#ffb38a","персиковый"],["#ff6f50","коралловый"],["#e8dcff","светлая лаванда"],["#ffe600","жёлтый"],["#1a4dff","синий"],["#8b0020","бордовый"],["#ff1a4a","вишнёвый"],["#2b0066","тёмно-фиолетовый"]]);
+const colorList = cols => { const n = [...new Set(cols.map(c => COLOR_NAMES[c]).filter(Boolean))]; return n.length ? 'Плавно: ' + n.join(' → ') : 'Плавный перелив цветов'; };
 const dot = c => `<i class="cdot" style="background:${c}"></i>`;
 
 // RGB и свой цвет
 MODES.push(
-  { id: 'rgb', cat: 'Цвета', ic: '🎨', name: 'RGB-перелив', desc: 'Красный → зелёный → синий по кругу',
+  { id: 'rgb', cat: 'Цвета', ic: '🎨', name: 'RGB-перелив', desc: 'Красный, зелёный, синий плавно перетекают друг в друга',
     param: { key: 'per', type: 'range', label: 'Время на цвет', min: 1, max: 10, step: 1, def: 3, unit: ' сек' },
     f: (t, st, p) => ({ l: 1, c: cycleColors(['#ff0000', '#00ff00', '#0000ff'], p.per)(t) }) },
-  { id: 'rgbstep', cat: 'Цвета', ic: '🟥', name: 'RGB-шаги', desc: 'Резкая смена R, G, B',
+  { id: 'rgbstep', cat: 'Цвета', ic: '🟥', name: 'RGB по очереди', desc: 'Красный, зелёный, синий — резко сменяются',
     param: { key: 'per', type: 'range', label: 'Смена каждые', min: .2, max: 3, step: .1, def: 1, unit: ' сек' },
     f: (t, st, p) => ({ l: 1, c: ['#ff0000', '#00ff00', '#0000ff'][Math.floor(t / p.per) % 3] }) },
-  { id: 'mycolor', cat: 'Цвета', ic: '🖌️', name: 'Свой цвет', desc: 'Любой цвет из палитры', screenOnly: true, noSpeed: true,
+  { id: 'mycolor', cat: 'Цвета', ic: '🖌️', name: 'Свой цвет', desc: 'Ровный свет любого цвета из палитры', screenOnly: true, noSpeed: true,
     param: { key: 'c', type: 'color', label: 'Цвет', def: '#00e5ff' }, f: (t, st, p) => ({ l: 1, c: p.c }) },
-  { id: 'mybreath', cat: 'Цвета', ic: '🫧', name: 'Свой цвет: дыхание', desc: 'Выбранный цвет плавно дышит',
+  { id: 'mybreath', cat: 'Цвета', ic: '🫧', name: 'Свой цвет: дыхание', desc: 'Ваш цвет плавно разгорается и гаснет',
     param: { key: 'c', type: 'color', label: 'Цвет', def: '#ff00aa' }, f: (t, st, p) => ({ l: smooth((t / 3) % 2 > 1 ? 2 - (t / 3) % 2 : (t / 3) % 2), c: p.c }) },
-  { id: 'mystrobe', cat: 'Цвета', ic: '💥', name: 'Свой цвет: строб', desc: 'Стробоскоп выбранным цветом',
+  { id: 'mystrobe', cat: 'Цвета', ic: '💥', name: 'Свой цвет: стробоскоп', desc: 'Частые вспышки вашим цветом',
     param: { key: 'c', type: 'color', label: 'Цвет', def: '#00ff66' }, f: (t, st, p) => ({ l: (t * 6 % 1) < .5 ? 1 : 0, c: p.c }) },
 );
 // Цвета: постоянный свет
-PALETTE.forEach(([n, c], i) => MODES.push({ id: 'sol' + i, cat: 'Цвета', ic: dot(c), name: n, desc: 'Ровный свет экрана', screenOnly: true, noSpeed: true, f: () => ({ l: 1, c }) }));
+PALETTE.forEach(([n, c], i) => MODES.push({ id: 'sol' + i, cat: 'Цвета', ic: dot(c), name: n, desc: 'Ровный свет этого цвета', screenOnly: true, noSpeed: true, f: () => ({ l: 1, c }) }));
 // Дыхание цветом
 PALETTE.forEach(([n, c], i) => MODES.push({ id: 'br' + i, cat: 'Дыхание', ic: dot(c), name: 'Дыхание: ' + n.toLowerCase(), desc: 'Плавный подъём и затухание',
   f: t => ({ l: (1 - Math.cos(t * Math.PI / 2)) / 2, c }) }));
 // Цветной стробоскоп
 [['Белый', '#ffffff'], ['Красный', '#ff1a1a'], ['Синий', '#1a4dff'], ['Зелёный', '#00ff4c'], ['Жёлтый', '#ffe600'], ['Фиолетовый', '#8a2bff'],
  ['Голубой', '#00c8ff'], ['Розовый', '#ff5fa8'], ['Оранжевый', '#ff8a00'], ['Случайный', null]].forEach(([n, c], i) => MODES.push({
-  id: 'stc' + i, cat: 'Стробоскопы', ic: c ? dot(c) : '🎲', name: 'Строб: ' + n.toLowerCase(), desc: 'Частые вспышки цветом',
+  id: 'stc' + i, cat: 'Стробоскопы', ic: c ? dot(c) : '🎲', name: 'Строб: ' + n.toLowerCase(), desc: 'Частые вспышки этим цветом',
   param: { key: 'hz', type: 'range', label: 'Частота', min: 1, max: 15, step: 1, def: 8, unit: ' Гц' },
   f: (t, st, p) => { const k = t * p.hz, j = Math.floor(k); if (!c && st.j !== j) { st.j = j; st.h = Math.random() * 360; } return { l: (k % 1) < .5 ? 1 : 0, c: c || `hsl(${st.h},100%,55%)` }; } }));
 // Переливы двух-трёх цветов
@@ -267,55 +269,62 @@ PALETTE.forEach(([n, c], i) => MODES.push({ id: 'br' + i, cat: 'Дыхание',
  ['Огонь и лёд', ['#ff3300', '#00c8ff']], ['Персик', ['#ffb38a', '#ff6f50']], ['Лаванда', ['#b9a2ff', '#e8dcff']], ['Солнце', ['#ffe600', '#ffffff', '#ff8a00']],
  ['Ночной город', ['#ff00aa', '#1a4dff', '#ff8a00']], ['Мята', ['#7dffc0', '#ffffff']], ['Флаг РФ', ['#ffffff', '#1a4dff', '#ff1a1a']],
  ['Вишня', ['#8b0020', '#ff1a4a']], ['Тропики', ['#00ffd0', '#ffe600', '#ff5fa8']], ['Галактика', ['#2b0066', '#ff00ff', '#00ffff', '#ffffff']]]
-  .forEach(([n, cols], i) => MODES.push({ id: 'gr' + i, cat: 'Переливы', ic: dot(cols[0]), name: n, desc: 'Плавный перелив цветов',
+  .forEach(([n, cols], i) => MODES.push({ id: 'gr' + i, cat: 'Переливы', ic: dot(cols[0]), name: n, desc: colorList(cols),
     f: t => ({ l: 1, c: cycleColors(cols, 2.5)(t) }) }));
 // Мигалки
 [['Полиция: красный-белый', '#ff1a1a', '#ffffff'], ['Полиция: синий-белый', '#1a4dff', '#ffffff'], ['Пожарная', '#ff1a1a', '#ff1a1a'],
  ['Скорая: синяя', '#1a4dff', '#1a4dff'], ['Спецтехника: жёлтая', '#ffb300', '#ffb300'], ['Зелёный маячок', '#00ff4c', '#00ff4c'],
  ['США: красно-синяя', '#ff1a1a', '#1a4dff'], ['Фиолетовая мигалка', '#8a2bff', '#ff00ff']].forEach(([n, a, b], i) => MODES.push({
-  id: 'sir' + i, cat: 'Мигалки', ic: '🚨', name: n, desc: 'Двойные вспышки поочерёдно',
+  id: 'sir' + i, cat: 'Мигалки', ic: '🚨', name: n, desc: 'Двойные вспышки двух цветов по очереди',
   f: t => { const x = t % 1, y = x % .5; return { l: (y < .08 || (y > .14 && y < .22)) ? 1 : 0, c: x < .5 ? a : b }; } }));
-MODES.push({ id: 'traffic', cat: 'Мигалки', ic: '🚦', name: 'Светофор', desc: 'Зелёный → жёлтый → красный', screenOnly: true,
+MODES.push({ id: 'traffic', cat: 'Мигалки', ic: '🚦', name: 'Светофор', desc: 'Зелёный, жёлтый, красный — как настоящий', screenOnly: true,
   f: t => { const x = t % 12; return x < 5 ? { l: 1, c: '#00e04c', label: 'ИДИ' } : x < 6.5 ? { l: (x * 2 % 1) < .5 ? 1 : 0, c: '#00e04c' } : x < 8 ? { l: 1, c: '#ffcc00' } : { l: 1, c: '#ff1a1a', label: 'СТОЙ' }; } });
 // Ритмы
 const rhythm = (id, ic, name, desc, f) => MODES.push({ id, cat: 'Ритмы', ic, name, desc, f });
-rhythm('dbl', '✌️', 'Двойная вспышка', 'Две вспышки и пауза', seq([[1, 1], [0, 1], [1, 1], [0, 7]], 100));
-rhythm('tri', '🔱', 'Тройная вспышка', 'Три вспышки и пауза', seq([[1, 1], [0, 1], [1, 1], [0, 1], [1, 1], [0, 7]], 100));
-rhythm('quad', '🍀', 'Четверная вспышка', 'Четыре вспышки и пауза', seq([[1, 1], [0, 1], [1, 1], [0, 1], [1, 1], [0, 1], [1, 1], [0, 8]], 100));
+rhythm('dbl', '✌️', 'Двойная вспышка', 'Две вспышки, затем пауза', seq([[1, 1], [0, 1], [1, 1], [0, 7]], 100));
+rhythm('tri', '🔱', 'Тройная вспышка', 'Три вспышки, затем пауза', seq([[1, 1], [0, 1], [1, 1], [0, 1], [1, 1], [0, 7]], 100));
+rhythm('quad', '🍀', 'Четыре вспышки', 'Четыре вспышки, затем пауза', seq([[1, 1], [0, 1], [1, 1], [0, 1], [1, 1], [0, 1], [1, 1], [0, 8]], 100));
 rhythm('slowblink', '🐢', 'Медленное мигание', 'Секунда свет, секунда темно', t => ({ l: (t % 2) < 1 ? 1 : 0 }));
 rhythm('fastblink', '🐇', 'Быстрое мигание', '4 раза в секунду', t => ({ l: (t * 4 % 1) < .5 ? 1 : 0 }));
-rhythm('saw', '📈', 'Нарастание', 'Плавно разгорается и резко гаснет', t => ({ l: t % 2 / 2 }));
-rhythm('rsaw', '📉', 'Угасание', 'Резко вспыхивает и плавно гаснет', t => ({ l: 1 - t % 2 / 2 }));
-rhythm('stairs', '🪜', 'Лесенка', 'Яркость ступеньками вверх', t => ({ l: (Math.floor(t * 2) % 5 + 1) / 5 }));
-rhythm('wave', '🌊', 'Волна', 'Мягкие волны света', t => ({ l: .5 + .25 * Math.sin(t * 2) + .25 * Math.sin(t * 3.3) }));
-rhythm('fireflies', '✨', 'Светлячки', 'Редкие мягкие огоньки', (t, st) => { if (st.n == null || t > st.n + 1.2) { st.n = t + .5 + Math.random() * 2.5; } const d = t - st.n; return { l: d > 0 && d < 1.2 ? Math.sin(d / 1.2 * Math.PI) : 0, c: '#d6ff5c' }; });
-rhythm('flicker', '💡', 'Сломанная лампа', 'Случайные подмигивания', (t, st) => ({ l: noise(t * 20) > .25 || noise(t * 3) > .6 ? 1 : .05, c: '#fff4d6' }));
-rhythm('glitch', '👾', 'Глитч', 'Цифровые сбои', (t, st) => { const k = Math.floor(t * 12); if (st.k !== k) { st.k = k; st.l = Math.random() < .3 ? 0 : 1; st.c = Math.random() < .2 ? `hsl(${Math.random() * 360},100%,55%)` : '#ffffff'; } return { l: st.l, c: st.c }; });
-rhythm('heartfast', '💓', 'Пульс: бег', 'Учащённое сердцебиение', t => { const x = (t * 2.2) % 1; return { l: Math.max(Math.exp(-(((x - .06) / .05) ** 2)), .7 * Math.exp(-(((x - .3) / .06) ** 2))), c: '#ff2d55' }; });
-rhythm('pingpong', '🏓', 'Пинг-понг', 'Тук… тук… быстрее и быстрее', t => { const x = t % 6, p = .9 - x * .13; return { l: (x % Math.max(p, .1)) < .06 ? 1 : 0 }; });
-rhythm('lighthouse', '🗼', 'Маяк: вращение', 'Луч проходит по кругу', t => ({ l: Math.max(0, Math.cos(t * Math.PI / 2)) ** 8 }));
-rhythm('lh2', '⚓', 'Маяк: группа', 'Две вспышки каждые 10 сек', seq([[1, 5], [0, 10], [1, 5], [0, 80]], 100));
-rhythm('bounce', '🏀', 'Мячик', 'Подскоки затухают', t => { const x = t % 4; let y = 0, s = 0; for (let i = 0, d = 1; i < 5; i++, d *= .6) { if (x >= s && x < s + d) { y = Math.sin((x - s) / d * Math.PI) * d; break; } s += d; } return { l: y }; });
-rhythm('morsebeat', '🥁', 'Барабан', 'Бум-бум-ча', seq([[1, 1], [0, 1], [1, 1], [0, 1], [.5, 2], [0, 2]], 120));
-rhythm('dimbright', '🌗', 'Тень и свет', 'Переключение 30% ↔ 100%', t => ({ l: (t % 2) < 1 ? 1 : .3 }));
-rhythm('sparkle', '🎇', 'Искры', 'Яркие короткие искры', (t, st) => { const k = Math.floor(t * 15); if (st.k !== k) { st.k = k; st.on = Math.random() < .25; } return { l: st.on ? 1 : 0, c: '#fff1b0' }; });
+rhythm('saw', '📈', 'Разгорание', 'Свет плавно разгорается и резко гаснет', t => ({ l: t % 2 / 2 }));
+rhythm('rsaw', '📉', 'Угасание', 'Свет резко вспыхивает и плавно гаснет', t => ({ l: 1 - t % 2 / 2 }));
+rhythm('stairs', '🪜', 'Лесенка', 'Яркость растёт ступеньками', t => ({ l: (Math.floor(t * 2) % 5 + 1) / 5 }));
+rhythm('wave', '🌊', 'Волна', 'Яркость мягко колышется, как волны', t => ({ l: .5 + .25 * Math.sin(t * 2) + .25 * Math.sin(t * 3.3) }));
+rhythm('fireflies', '✨', 'Светлячки', 'Редкие мягкие зеленоватые огоньки', (t, st) => { if (st.n == null || t > st.n + 1.2) { st.n = t + .5 + Math.random() * 2.5; } const d = t - st.n; return { l: d > 0 && d < 1.2 ? Math.sin(d / 1.2 * Math.PI) : 0, c: '#d6ff5c' }; });
+rhythm('flicker', '💡', 'Сломанная лампа', 'Лампа то и дело неровно мигает', (t, st) => ({ l: noise(t * 20) > .25 || noise(t * 3) > .6 ? 1 : .05, c: '#fff4d6' }));
+rhythm('glitch', '👾', 'Помехи', 'Резкие сбои, как у сломанного экрана', (t, st) => { const k = Math.floor(t * 12); if (st.k !== k) { st.k = k; st.l = Math.random() < .3 ? 0 : 1; st.c = Math.random() < .2 ? `hsl(${Math.random() * 360},100%,55%)` : '#ffffff'; } return { l: st.l, c: st.c }; });
+rhythm('heartfast', '💓', 'Быстрый пульс', 'Сердце бьётся часто, как после бега', t => { const x = (t * 2.2) % 1; return { l: Math.max(Math.exp(-(((x - .06) / .05) ** 2)), .7 * Math.exp(-(((x - .3) / .06) ** 2))), c: '#ff2d55' }; });
+rhythm('pingpong', '🏓', 'Пинг-понг', 'Вспышки всё чаще, как скачущий мячик', t => { const x = t % 6, p = .9 - x * .13; return { l: (x % Math.max(p, .1)) < .06 ? 1 : 0 }; });
+rhythm('lighthouse', '🗼', 'Маяк: луч', 'Мягкая вспышка, как от вращающегося маяка', t => ({ l: Math.max(0, Math.cos(t * Math.PI / 2)) ** 8 }));
+rhythm('lh2', '⚓', 'Маяк: две вспышки', 'Две вспышки каждые 10 сек', seq([[1, 5], [0, 10], [1, 5], [0, 80]], 100));
+rhythm('bounce', '🏀', 'Мячик', 'Вспышки затухают, как прыгающий мяч', t => { const x = t % 4; let y = 0, s = 0; for (let i = 0, d = 1; i < 5; i++, d *= .6) { if (x >= s && x < s + d) { y = Math.sin((x - s) / d * Math.PI) * d; break; } s += d; } return { l: y }; });
+rhythm('morsebeat', '🥁', 'Барабан', 'Ритм «бум-бум-ча»', seq([[1, 1], [0, 1], [1, 1], [0, 1], [.5, 2], [0, 2]], 120));
+rhythm('dimbright', '🌗', 'Тень и свет', 'Яркость прыгает: 30% → 100% → 30%', t => ({ l: (t % 2) < 1 ? 1 : .3 }));
+rhythm('sparkle', '🎇', 'Искры', 'Случайные короткие яркие искры', (t, st) => { const k = Math.floor(t * 15); if (st.k !== k) { st.k = k; st.on = Math.random() < .25; } return { l: st.on ? 1 : 0, c: '#fff1b0' }; });
 // Радуга-варианты
 [['Радуга: быстрая', 1, 'f'], ['Радуга: медленная', 6, 'f'], ['Радуга: строб', 1.5, 's'], ['Радуга: дыхание', 3, 'b'], ['Радуга: пульс', 2, 'p']]
-  .forEach(([n, per, kind], i) => MODES.push({ id: 'rb' + i, cat: 'Переливы', ic: '🌈', name: n, desc: 'Все цвета радуги',
+  .forEach(([n, per, kind], i) => MODES.push({ id: 'rb' + i, cat: 'Переливы', ic: '🌈', name: n, desc: 'Цвета радуги по кругу',
     f: t => { const c = `hsl(${(t / per * 60) % 360},100%,55%)`; const l = kind === 's' ? ((t * 8 % 1) < .5 ? 1 : 0) : kind === 'b' ? (1 - Math.cos(t * Math.PI / 2)) / 2 : kind === 'p' ? Math.exp(-((((t % 1) - .1) / .08) ** 2)) : 1; return { l, c }; } }));
 // Полезное свет
 [['Свет для чтения', '#ffd9a0', .55, '📖'], ['Селфи-свет', '#fff3e6', 1, '🤳'], ['Мягкий свет для фото', '#ffe8cc', .8, '📸'],
  ['Свет для макияжа', '#fffaf2', 1, '💄'], ['Ночник', '#ff8a3a', .15, '🧸'], ['Кинотеатр (тусклый)', '#ff3a1a', .08, '🎬']]
   .forEach(([n, c, l, ic], i) => MODES.push({ id: 'use' + i, cat: 'Полезное', ic, name: n, desc: `Ровный свет ${Math.round(l * 100)}%`, screenOnly: true, noSpeed: true, f: () => ({ l, c }) }));
-MODES.push({ id: 'countdown', cat: 'Полезное', ic: '⏳', name: 'Обратный отсчёт', desc: 'Цифры 10…1 и вспышка', screenOnly: true, noSpeed: true,
+MODES.push({ id: 'countdown', cat: 'Полезное', ic: '⏳', name: 'Обратный отсчёт', desc: 'Большие цифры 10…1, в конце — яркая вспышка', screenOnly: true, noSpeed: true,
   f: (t, st, p, rt) => { const r = 10 - Math.floor(rt); if (rt > 11) return { l: 0, done: true }; return r > 0 ? { l: (rt % 1) < .15 ? .4 : 0, c: '#ffffff', label: String(r) } : { l: 1, c: '#ffffff', label: '🎉' }; } });
 // Морзе-фразы
+const PHRASE_DESC = { 'SOS SOS': 'Сигнал бедствия дважды подряд', HELP: '«Помогите» по-английски', MAYDAY: '«Терплю бедствие» — международный голосовой сигнал',
+  HI: '«Привет» по-английски', HELLO: '«Здравствуйте» по-английски', YES: '«Да» по-английски', NO: '«Нет» по-английски', LOVE: '«Любовь» по-английски',
+  'I LOVE YOU': '«Я тебя люблю» по-английски', THANKS: '«Спасибо» по-английски', 'GOOD NIGHT': '«Спокойной ночи» по-английски',
+  'CQ CQ': '«Всем, кто слышит» — вызов на связь у радистов', 73: '«Всего наилучшего» — прощание радистов', 88: '«Обнимаю и целую» на языке радистов',
+  PARIS: 'Слово, по которому измеряют скорость Морзе', QRZ: '«Кто меня вызывает?» у радистов', ABC: 'Первые буквы английского алфавита',
+  'АБВ': 'Первые буквы русского алфавита', 123: 'Цифры 1, 2, 3', '0 1 2 3 4 5 6 7 8 9': 'Все цифры по порядку — для тренировки',
+  'АЛФАВИТ А Б В Г Д': 'Первые буквы алфавита — для тренировки', 'ХА ХА': 'Смех', 'ОТБОЙ': 'Конец связи' };
 ['SOS SOS', 'HELP', 'MAYDAY', 'ПОМОЩЬ', 'СПАСИТЕ', 'ОПАСНО', 'СТОП', 'ДА', 'НЕТ', 'ПРИВЕТ', 'ПОКА', 'СПАСИБО', 'ЛЮБЛЮ', 'ЛЮБЛЮ ТЕБЯ',
  'Я ЗДЕСЬ', 'ИДИ СЮДА', 'ЖДИ', 'ВСЁ ХОРОШО', 'НУЖЕН ВРАЧ', 'ВОДА', 'ЕДА', 'ОГОНЬ', 'БЕГИ', 'ТИХО', 'ДОМОЙ', 'СПОКОЙНОЙ НОЧИ',
  'С ДНЁМ РОЖДЕНИЯ', 'С НОВЫМ ГОДОМ', 'ХА ХА', 'HI', 'HELLO', 'YES', 'NO', 'LOVE', 'I LOVE YOU', 'THANKS', 'CQ CQ', '73', '88',
  'PARIS', 'QRZ', 'ABC', 'АБВ', '123', '0 1 2 3 4 5 6 7 8 9', 'АЛФАВИТ А Б В Г Д', 'ДРУГ', 'ВРАГ БЛИЗКО',
  'ДОБРОЕ УТРО', 'КАК ДЕЛА', 'Я ИДУ', 'ПОЗВОНИ', 'ОТБОЙ', 'GOOD NIGHT']
-  .forEach((w, i) => MODES.push({ id: 'mp' + i, cat: 'Морзе-фразы', ic: '📡', name: w, desc: w.replace(/./g, ch => MORSE[ch] ? pretty(MORSE[ch]) + ' ' : ch === ' ' ? '/ ' : '').trim().slice(0, 60),
+  .forEach((w, i) => MODES.push({ id: 'mp' + i, cat: 'Морзе-фразы', ic: '📡', name: w, desc: PHRASE_DESC[w] || 'Передаёт эти слова азбукой Морзе',
     ...seqMode(morseItems(w), U) }));
 
 // режимы, которые передают азбуку Морзе (их можно читать приёмником)
@@ -482,18 +491,20 @@ stage.addEventListener('pointerdown', () => { if (locked) { stage.classList.remo
 /* ===== движок режимов ===== */
 const Engine = {
   mode: null, st: {}, raf: 0, t0: 0, prev: 0, useScreen: true, useTorch: false, p: {},
-  async start(m) {
+  async start(m, opt = {}) {
     stopAll();
-    this.p = paramsOf(m); this.st = {}; this.mode = m;
+    this.onDone = opt.onDone || null;
+    this.p = opt.params || paramsOf(m); this.st = {}; this.mode = m;
     this.useScreen = m.screenOnly || cfg.target !== 'torch';
     this.useTorch = !m.screenOnly && cfg.target !== 'screen';
+    if (opt.target) { this.useScreen = opt.target !== 'torch'; this.useTorch = opt.target !== 'screen'; }
     if (this.useTorch && !(await Torch.init())) {
       this.useTorch = false; this.useScreen = true; torchFail();
     }
     try { await m.init?.(this.st, this.p); }
     catch (e) { this.mode = null; toast('⚠️ Нет доступа: ' + (e.name === 'NotAllowedError' ? 'разрешите микрофон' : e.message)); return; }
-    active = 'mode'; cfg.last = m.id; save('last');
-    cfg.uses[m.id] = (cfg.uses[m.id] || 0) + 1; save('uses'); renderLast(); renderModes();
+    active = 'mode';
+    if (!opt.temp) { cfg.last = m.id; save('last'); cfg.uses[m.id] = (cfg.uses[m.id] || 0) + 1; save('uses'); renderLast(); renderModes(); }
     showStage(m.name);
     $('#stageHint').textContent = this.useScreen ? 'Двойной тап — выключить · свайп — яркость' : 'Светит вспышка · двойной тап — выключить';
     if (m.ticker) {
@@ -503,11 +514,11 @@ const Engine = {
       $('#ticker').classList.add('on');
     }
     glow.style.opacity = 0;
-    this.speed = m.noSpeed ? 1 : (cfg.speeds[m.id] || 1);
+    this.speed = opt.speed || (m.noSpeed ? 1 : (cfg.speeds[m.id] || 1));
     // вспышка переключается с задержкой — Морзе через неё передаём не быстрее 0.75×, чтобы приёмник читал без ошибок
     if (m.morse && this.useTorch) this.speed = Math.min(this.speed, .75);
     this.t0 = performance.now(); this.prev = 0;
-    wake(true); startTimer(cfg.timer);
+    wake(true); startTimer(opt.temp ? 0 : cfg.timer);
     const loop = () => {
       if (!this.mode) return;
       const rt = (performance.now() - this.t0) / 1000;
@@ -518,7 +529,7 @@ const Engine = {
       if (cfg.vibrate && l > .5 && this.prev <= .5) navigator.vibrate?.(35);
       this.prev = l;
       if (r.label !== undefined && $('#stageLabel').textContent !== r.label) $('#stageLabel').textContent = r.label;
-      if (r.done) { stopAll(); toast('🌙 Спокойной ночи'); return; }
+      if (r.done) { const cb = this.onDone; this.onDone = null; stopAll(); if (cb) cb(); else toast('🌙 Готово'); return; }
       this.raf = requestAnimationFrame(loop);
     };
     loop();
@@ -580,6 +591,19 @@ function seg(el, items, cur, onPick) {
   el.onclick = e => { const b = e.target.closest('button'); if (!b || b.disabled) return; el.querySelectorAll('button').forEach(x => x.classList.toggle('sel', x === b)); onPick(b.dataset.v); };
 }
 const TIMERS = [[0, 'Нет'], [1, '1 мин'], [5, '5'], [15, '15'], [30, '30'], [60, '60']];
+const fmtMin = m => { const s = Math.round(m * 60); return s >= 3600 ? Math.floor(s / 3600) + ':' + String(Math.floor(s / 60) % 60).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0') : Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+function timerSeg(el) {
+  const preset = TIMERS.some(([v]) => v === cfg.timer);
+  const items = [[0, 'Нет'], ['c', preset ? '⏱ Своё' : '⏱ ' + fmtMin(cfg.timer)], ...TIMERS.slice(1)];
+  seg(el, items, preset ? cfg.timer : 'c', v => {
+    if (v !== 'c') { cfg.timer = +v; save('timer'); renderTimers(); return; }
+    const s = Math.round((preset ? 2.5 : cfg.timer) * 60);
+    openWheel('Выключить через', [{ vals: range(0, 23), init: Math.floor(s / 3600), unit: 'ч' }, { vals: range(0, 59), init: Math.floor(s / 60) % 60, unit: 'мин' }, { vals: range(0, 59), init: s % 60, unit: 'сек' }])
+      .then(r => { if (r) { const m = (r[0] * 3600 + r[1] * 60 + r[2]) / 60; cfg.timer = m > 0 ? m : 0; save('timer'); } renderTimers(); });
+  });
+}
+function renderTimers() { timerSeg($('#timerSeg')); if (!$('#sheet').hidden) timerSeg($('#shTimer')); }
+const range = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
 function openSheet(m) {
   sheetMode = m;
   $('#shIc').innerHTML = m.ic; $('#shName').textContent = m.name; $('#shDesc').textContent = m.desc;
@@ -602,8 +626,8 @@ function openSheet(m) {
   const noT = isIOS || Torch.supported === false;
   if (noT && cfg.target !== 'screen') cfg.target = 'screen';
   seg($('#shTarget'), [['torch', '🔦 Вспышка', noT], ['screen', '⬜ Экран'], ['both', '🔦+⬜ Оба', noT]], cfg.target, v => { cfg.target = v; save('target'); });
-  seg($('#shTimer'), TIMERS, cfg.timer, v => { cfg.timer = +v; save('timer'); renderTimerSeg(); });
   $('#sheet').hidden = false;
+  timerSeg($('#shTimer'));
 }
 $('#shSpeed').oninput = e => $('#shSpeedV').textContent = e.target.value + '×';
 $('#shFav').onclick = () => { toggleFav(sheetMode.id); $('#shFav').textContent = cfg.favs.includes(sheetMode.id) ? '📌' : '📍'; toast(cfg.favs.includes(sheetMode.id) ? '📌 Закреплено сверху' : 'Откреплено'); };
@@ -621,7 +645,7 @@ $('#shStart').onclick = () => {
 };
 
 /* ===== настройки ===== */
-function renderTimerSeg() { seg($('#timerSeg'), TIMERS, cfg.timer, v => { cfg.timer = +v; save('timer'); }); }
+function renderTimerSeg() { timerSeg($('#timerSeg')); }
 if ('vibrate' in navigator) { $('#vibChk').checked = cfg.vibrate; $('#vibChk').onchange = e => { cfg.vibrate = e.target.checked; save('vibrate'); }; }
 else { $('#vibCard').hidden = true; cfg.vibrate = false; }
 function updateTorchInfo() {
@@ -645,9 +669,10 @@ $('#installState').textContent = standalone ? '✅ Приложение уста
 /* ===== Морзе: язык, подвкладки ===== */
 let mLang = S.get('mLang', 'ru');
 seg($('#mLang'), [['ru', 'RU'], ['en', 'EN']], mLang, v => { mLang = v; S.set('mLang', v); renderDec(); renderAbc(); Rx.render(true); padRender(); });
-seg($('#mSub'), [['rx', '📷 Приёмник'], ['dec', '⌨️ Декодер'], ['abc', '🔤 Азбука']], 'rx', v => {
-  ['rx', 'dec', 'abc'].forEach(k => $('#m-' + k).hidden = k !== v);
-  if (v !== 'rx') Rx.stop();
+seg($('#mSub'), [['chat', '💬 Чат'], ['tx', '📤 Передать'], ['rx', '📷 Принять'], ['dec', '⌨️ Расшифровать'], ['abc', '🔤 Азбука']], 'chat', v => {
+  ['chat', 'tx', 'rx', 'dec', 'abc'].forEach(k => $('#m-' + k).hidden = k !== v);
+  window.onMorseSub?.(v);
+  if (v !== 'rx' && v !== 'chat') Rx.stop();
 });
 
 /* --- декодер: я пишу, что увидел --- */
@@ -840,7 +865,7 @@ class MorseListener {
   close() {
     if (this.segs.length) {
       const r = decodeSegs(this.segs, mLang, this.prior, true, this.human);
-      const tx = r.text.trim(); if (tx) this.done += tx + ' ';
+      const tx = r.text.trim(); if (tx) { this.done += tx + ' '; this.onText?.(tx); }
       if (this.segs.length >= 7 && !this.human) S.set('mUnit', Math.round(clamp(r.e.u, 40, 1500)));
     }
     this.segs = [];
@@ -851,7 +876,9 @@ class MorseListener {
     if (this.segs.length || this.state) segs.push({ s: this.state, d: Math.max(0, now - this.t), live: true });
     if (!segs.length) return { text: this.done, pending: '', D: this.D };
     const r = decodeSegs(segs, mLang, this.prior, false, this.human); this.D = r.e.u;
-    return { text: this.done + r.text, pending: r.pending, D: r.e.u };
+    return { text: this.done + r.text, session: r.text, pending: r.pending, D: r.e.u };
+  }
+  dropLast() { const a = this.segs; if (a.length && a[a.length - 1].s) a.pop(); if (a.length && !a[a.length - 1].s) a.pop();
   }
   stop(t) { if (this.state) this.edge(0, t); this.close(); this.state = 0; }
 }
@@ -869,7 +896,7 @@ const Rx = {
     if (active === 'torch' || (active === 'mode' && Engine.useTorch)) stopAll(); // камеру занимает вспышка
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({ audio: false,
-        video: { facingMode: { ideal: 'environment' }, width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 60 } } });
+        video: { facingMode: { ideal: this.facing || 'environment' }, width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 60 } } });
     } catch (e) { toast('⚠️ Нет доступа к камере — разрешите его в настройках браузера'); return; }
     // чуть темнее экспозиция — фон темнее, вспышка ярче на его фоне
     try {
@@ -913,9 +940,14 @@ const Rx = {
     const r = this.region(v);
     this.ctx.drawImage(v, r.x, r.y, r.w, r.h, 0, 0, 64, 64);
     const d = this.ctx.getImageData(0, 0, 64, 64).data, hist = new Uint32Array(256);
-    for (let i = 0; i < d.length; i += 4) hist[(d[i] * 77 + d[i + 1] * 150 + d[i + 2] * 29) >> 8]++;
-    const need = 123; let sum = 0, n = 0; // средняя яркость 3% самых ярких точек
-    for (let b = 255; b >= 0 && n < need; b--) { const k = Math.min(hist[b], need - n); sum += k * b; n += k; }
+    // яркость точки = самый яркий канал (синий/зелёный свет иначе выглядел бы тёмным)
+    for (let i = 0; i < d.length; i += 4) hist[Math.max(d[i], d[i + 1], d[i + 2])]++;
+    const need = 123; let sum = 0, n = 0, cut = 255; // средняя яркость 3% самых ярких точек
+    for (let b = 255; b >= 0 && n < need; b--) { const k = Math.min(hist[b], need - n); sum += k * b; n += k; cut = b; }
+    // цвет этих же точек — для быстрого цветного кода
+    let R = 0, G = 0, B = 0, c = 0;
+    for (let i = 0; i < d.length; i += 4) if (Math.max(d[i], d[i + 1], d[i + 2]) >= cut) { R += d[i]; G += d[i + 1]; B += d[i + 2]; c++; }
+    this.rgb = c ? [R / c, G / c, B / c] : [0, 0, 0];
     return sum / n;
   },
   frame(t, viaRaf) {
@@ -929,6 +961,7 @@ const Rx = {
   },
   process(t, val) {
     this.now = t;
+    if (this.paused) { this.win = []; this.cand = null; this.candN = 0; if (this.state) { this.state = 0; this.L.state = 0; } this.L.t = t; return; }
     this.win.push([t, val]);
     while (this.win[0][0] < t - 5000) this.win.shift();
     let lo = 255, hi = 0; for (const [, x] of this.win) { if (x < lo) lo = x; if (x > hi) hi = x; }
@@ -942,6 +975,7 @@ const Rx = {
         if (want) navigator.vibrate?.(12);
       }
     } else { this.cand = null; this.candN = 0; }
+    if (window.ColorRx) ColorRx.feed(t, val, this.rgb, lo, range);
     $('#rxLevel').style.width = clamp(val / 255) * 100 + '%';
     $('#rxThr').style.left = clamp(thrOn / 255) * 100 + '%';
     $('#rxLamp').classList.toggle('on', !!this.state);
